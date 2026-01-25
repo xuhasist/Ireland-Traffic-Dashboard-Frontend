@@ -6,14 +6,11 @@ const CONFIG = {
   cities: {
     Dublin: {
       center: [53.3498, -6.2603], // 都柏林市中心座標
-      zoom: 13, // 市中心縮放級別
-      //radius: 5000, // 5公里範圍
-      timeZone: "Europe/Dublin", // 都柏林時區
       bbox: {
-        minLon: -6.3871, // 西边界
-        minLat: 53.2964, // 南边界
-        maxLon: -6.1335, // 东边界
-        maxLat: 53.4032, // 北边界
+        minLon: -6.3871, // 西邊界
+        minLat: 53.2964, // 南邊界
+        maxLon: -6.1335, // 東邊界
+        maxLat: 53.4032, // 北邊界
       },
       roads: [
         // City Centre - Major Shopping Streets
@@ -39,8 +36,6 @@ const CONFIG = {
     },
     Cork: {
       center: [51.903614, -8.468399],
-      zoom: 13,
-      timeZone: "Europe/Dublin",
       bbox: {
         minLon: -8.595199000000001,
         minLat: 51.850213999999994,
@@ -62,8 +57,6 @@ const CONFIG = {
     },
     Galway: {
       center: [53.270962, -9.062691],
-      zoom: 13,
-      timeZone: "Europe/Dublin",
       bbox: {
         minLon: -9.189491,
         minLat: 53.217562,
@@ -85,8 +78,6 @@ const CONFIG = {
     },
     Limerick: {
       center: [52.668018, -8.630498],
-      zoom: 13,
-      timeZone: "Europe/Dublin",
       bbox: {
         minLon: -8.757297999999999,
         minLat: 52.61461799999999,
@@ -108,8 +99,6 @@ const CONFIG = {
     },
     Waterford: {
       center: [52.25833, -7.11194],
-      zoom: 13,
-      timeZone: "Europe/Dublin",
       bbox: {
         minLon: -7.23874,
         minLat: 52.204930000000004,
@@ -130,9 +119,13 @@ const CONFIG = {
       ],
     },
   },
+  zoom: 13, // 市中心縮放級別
+  //radius: 5000, // 5公里範圍
+  timeZone: "Europe/Dublin", // 都柏林時區
   //updateInterval: 5 * 60 * 1000, // 5分鐘自動更新
   updateInterval: 5 * 1000, // 5秒自動更新 (測試用)
   thresholds: {
+    // jam factor 分級標準
     goodMax: 4,
     moderateMax: 7,
   },
@@ -141,8 +134,8 @@ const CONFIG = {
     incidentItemsPerPage: 5,
   },
   charts: {
-    speedTrendMaxPoints: 10,
-    speedTrendYMax: 60,
+    speedTrendMaxPoints: 10, // 折線圖最多顯示點數
+    speedTrendYMax: 60, // 折線圖 Y 軸最大值
   },
 };
 
@@ -179,7 +172,7 @@ const state = {
 };
 
 // ================================
-// DOM CACHE
+// DOM(Document Object Model) CACHE
 // ================================
 const dom = {
   loadingOverlay: null,
@@ -187,8 +180,8 @@ const dom = {
   // navbar
   navbarTitle: null,
   cityDropdown: null,
-  dataModeToggle: null,
   dataModeLabel: null,
+  dataModeToggle: null,
   refreshBtn: null,
   autoUpdateBtn: null,
   // weather
@@ -196,11 +189,11 @@ const dom = {
   // map
   mapEl: null,
   centerMapBtn: null,
+  // metrics
+  metricCards: null,
   // charts
   speedTrendCanvas: null,
   congestionCanvas: null,
-  // metrics
-  metricCards: null,
   // traffic
   sortDropdown: null,
   filterBtn: null,
@@ -319,8 +312,8 @@ function cacheDom() {
   // navbar
   dom.navbarTitle = document.querySelector(".navbar h1");
   dom.cityDropdown = document.getElementById("cityDropdown");
-  dom.dataModeToggle = document.getElementById("dataModeToggle");
   dom.dataModeLabel = document.getElementById("dataModeLabel");
+  dom.dataModeToggle = document.getElementById("dataModeToggle");
   dom.refreshBtn = document.querySelector(".nav-buttons .btn");
   dom.autoUpdateBtn = document.querySelector(".btn-primary");
 
@@ -370,24 +363,29 @@ function cacheDom() {
 // ================================
 // UTILITIES
 // ================================
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n)); // limit n between min and max
+
 function capitalizeFirst(s) {
-  if (!s) return "";
+  if (!s) return ""; // all falsy values: false, 0, "", null, undefined, NaN
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
 function minutesAgoToText(minutesAgo) {
+  // check minutesAgo is a number
   if (!Number.isFinite(minutesAgo) || minutesAgo < 0) return "--";
   if (minutesAgo < 60) return `${minutesAgo} mins ago`;
   const hoursAgo = Math.floor(minutesAgo / 60);
   return `${hoursAgo} hour${hoursAgo > 1 ? "s" : ""} ago`;
 }
+
 function jamToStatus(jamFactor) {
   if (jamFactor < CONFIG.thresholds.goodMax) return "good";
   if (jamFactor < CONFIG.thresholds.moderateMax) return "moderate";
   return "heavy";
 }
+
 function updateAutoUpdateButton(isRunning) {
-  if (!dom.autoUpdateBtn) return;
+  if (!dom.autoUpdateBtn) return; // check button exists
   dom.autoUpdateBtn.querySelector(".icon").textContent = isRunning
     ? "⏸️"
     : "▶️";
@@ -395,12 +393,14 @@ function updateAutoUpdateButton(isRunning) {
     ? "Stop Auto-Update"
     : "Start Auto-Update";
 }
+
 function showLoading() {
   dom.loadingOverlay?.classList.add("active");
 }
 function hideLoading() {
   dom.loadingOverlay?.classList.remove("active");
 }
+
 function formatTime(timeZone) {
   return new Date().toLocaleTimeString("en-GB", {
     timeZone: timeZone,
@@ -423,21 +423,29 @@ function formatTimeWithSeconds(timeZone) {
 // CITY & DATA MODE HELPERS
 // ================================
 function getCityConfig() {
+  // if cityKey not found, return default city config
   return CONFIG.cities[state.cityKey] ?? CONFIG.cities[CONFIG.defaultCity];
 }
+
 function setCity(cityKey) {
-  if (!CONFIG.cities[cityKey]) return;
+  if (!CONFIG.cities[cityKey]) return; // city not found
   state.cityKey = cityKey;
+
+  // persist selection
+  // next time user opens the app, it will load the last selected city
   localStorage.setItem("traffic_dashboard_city", cityKey);
+
   // Update navbar title + center button tooltip
   const cityName = cityKey;
   if (dom.navbarTitle)
     dom.navbarTitle.textContent = `🚦 ${cityName} Traffic Dashboard`;
   if (dom.centerMapBtn) dom.centerMapBtn.title = `Center on ${cityName}`;
+
   // Reset paging + chart history
   state.traffic.page = 1;
   state.incidents.page = 1;
   state.metrics.prevAvgSpeed = null;
+
   // Reset charts series
   if (state.charts.speedTrend) {
     state.charts.speedTrend.data.labels = [];
@@ -447,24 +455,31 @@ function setCity(cityKey) {
   // Recenter map
   centerMap();
 }
+
 function setDataMode(mode) {
   state.dataMode = mode === "live" ? "live" : "mock";
   localStorage.setItem("traffic_dashboard_dataMode", state.dataMode);
   if (dom.dataModeLabel) {
-    dom.dataModeLabel.textContent =
-      state.dataMode === "live" ? "Live API" : "Mock Data";
+    dom.dataModeLabel.textContent = "Live Data";
+    //state.dataMode === "live" ? "Live API" : "Mock Data";
   }
 }
+
 function syncUIFromState() {
   // City dropdown
   if (dom.cityDropdown) dom.cityDropdown.value = state.cityKey;
+
   // Data mode toggle (checked = live)
   if (dom.dataModeToggle)
+    // checkbox
     dom.dataModeToggle.checked = state.dataMode === "live";
+
   // Navbar title + tooltip
+  /*
   if (dom.navbarTitle)
     dom.navbarTitle.textContent = `🚦 ${state.cityKey} Traffic Dashboard`;
   if (dom.centerMapBtn) dom.centerMapBtn.title = `Center on ${state.cityKey}`;
+  */
 }
 
 // ================================
@@ -473,6 +488,7 @@ function syncUIFromState() {
 function generateMockTrafficFlow() {
   // 整個function的回傳值
   return {
+    // each roads become an object in results array
     results: getCityConfig().roads.map((road, index) => {
       const jamFactor = parseFloat((Math.random() * 10).toFixed(1));
       const freeFlowSpeed = 50;
@@ -514,6 +530,22 @@ function generateMockTrafficFlow() {
       };
     }),
   };
+
+  /* return json */
+  /*
+  {
+    "results": [
+      { // road segment 1
+        "location": {...},
+        "currentFlow": {...}
+      },
+      { // road segment 2
+        "location": {...},
+        "currentFlow": {...}
+      }
+    ]
+  }
+  */
 }
 
 function generateMockIncidents() {
@@ -564,23 +596,27 @@ function generateMockIncidents() {
       };
     }),
   };
-}
 
-// Global Variables
-/*
-let map = null;
-let currentSort = "worst";
-let autoUpdateInterval = null;
-let trafficData = [];
-let incidentsData = [];
-let weatherData = null;
-let speedTrendChart = null;
-let congestionChart = null;
-let trafficCurrentPage = 1;
-const trafficItemsPerPage = 10;
-let incidentCurrentPage = 1;
-const incidentItemsPerPage = 5;
-*/
+  /* return json */
+  /*
+  {
+    "results": [
+      { // road segment 1
+        "incidentDetails": {...},
+        "location": {...},
+        "impact": {...},
+        "icon": "..."
+      },
+      { // road segment 2
+        "incidentDetails": {...},
+        "location": {...},
+        "impact": {...},
+        "icon": "..."
+      }
+    ]
+  }
+  */
+}
 
 // ================================
 // SERVICES
@@ -658,7 +694,7 @@ class TomTomAPI {
       `${this.BASE_URL}/5/incidentDetails` +
       `?key=${this.API_KEY}` +
       `&bbox=${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}` +
-      `&language=en-US` +
+      `&language=en-GB` +
       `&fields=${fields}`;
 
     try {
@@ -836,8 +872,9 @@ function initializeMap() {
   if (state.map) state.map.remove();
 
   const city = getCityConfig();
-  state.map = L.map("map").setView(city.center, city.zoom);
+  state.map = L.map("map").setView(city.center, CONFIG.zoom); // Initialize Leaflet map
 
+  // OpenStreetMap Tile Layer
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -846,7 +883,7 @@ function initializeMap() {
 
 function centerMap() {
   const city = getCityConfig();
-  if (state.map) state.map.setView(city.center, city.zoom);
+  if (state.map) state.map.setView(city.center, CONFIG.zoom);
 }
 
 // ========================================
@@ -855,20 +892,23 @@ function centerMap() {
 function initializeCharts() {
   // Speed Trend Chart
   if (dom.speedTrendCanvas) {
+    // use Chart.js to create line chart
     state.charts.speedTrend = new Chart(dom.speedTrendCanvas, {
       type: "line",
       data: {
-        labels: [],
+        // content of the chart
+        labels: [], // x-axis labels (time)
         datasets: [
+          // one line one dataset, only one line here
           {
             label: "Average Speed (km/h)",
-            data: [],
-            borderColor: "#3b82f6",
-            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            data: [], // y-axis data points
+            borderColor: "#3b82f6", // line color
+            backgroundColor: "rgba(59, 130, 246, 0.1)", // fill color under the line
             tension: 0.4,
-            fill: true,
+            fill: true, // fill area under the line
             pointRadius: 4,
-            pointHoverRadius: 6,
+            pointHoverRadius: 6, // 滑鼠移過時放大點的半徑
           },
         ],
       },
@@ -878,6 +918,7 @@ function initializeCharts() {
         plugins: {
           legend: { display: false },
           tooltip: {
+            // 滑鼠提示
             mode: "index",
             intersect: false,
             backgroundColor: "rgba(0, 0, 0, 0.8)",
@@ -891,9 +932,11 @@ function initializeCharts() {
             beginAtZero: true,
             max: CONFIG.charts.speedTrendYMax, // e.g., 60 km/h
             ticks: {
+              // y軸刻度
               callback: (value) => `${value} km/h`,
             },
             grid: {
+              // light grid lines
               color: "rgba(0, 0, 0, 0.05)",
             },
           },
@@ -943,7 +986,7 @@ function updateSpeedTrendChart() {
   if (!chart || !state.traffic.data.length) return;
 
   const now = new Date();
-  const timeLabel = formatTimeWithSeconds(getCityConfig().timeZone);
+  const timeLabel = formatTimeWithSeconds(CONFIG.timeZone); // get current time label
 
   const avgSpeed =
     state.traffic.data.reduce((sum, d) => sum + d.speed, 0) /
@@ -985,14 +1028,14 @@ function updateCongestionChart() {
 function updateWeatherWidget() {
   if (!dom.weatherWidget || !state.weather) return;
 
-  const city = getCityConfig();
-  const { temperature, description, icon } = state.weather;
+  //const city = getCityConfig();
+  const { temperature, description, icon } = state.weather; // get values by key names
 
   dom.weatherWidget.querySelector(".weather-temp").textContent = `${Math.round(
     temperature
   )}°C`;
   dom.weatherWidget.querySelector(".weather-time").textContent = formatTime(
-    city.timeZone
+    CONFIG.timeZone
   );
   dom.weatherWidget.querySelector(".weather-desc").textContent =
     capitalizeFirst(description);
@@ -1057,8 +1100,8 @@ function updateMetricsCards() {
   const traffic = state.traffic.data ?? [];
   const incidents = state.incidents.data ?? [];
 
-  const city = getCityConfig();
-  const updatedAt = formatTimeWithSeconds(city.timeZone);
+  //const city = getCityConfig();
+  const updatedAt = formatTimeWithSeconds(CONFIG.timeZone);
 
   state.metrics.lastUpdatedAt = updatedAt;
 
@@ -1070,16 +1113,19 @@ function updateMetricsCards() {
     0
   );
 
-  const avgSpeed = (totalSpeed / traffic.length).toFixed(0);
+  const avgSpeed = totalSpeed / traffic.length;
 
   const congestedRoads = traffic.filter(
     (d) => Number(d.jamLevel) >= CONFIG.thresholds.moderateMax
   ).length;
 
+  /*
   const filteredIncidents =
     typeof getFilteredIncidents === "function"
       ? getFilteredIncidents()
       : incidents;
+  */
+  const filteredIncidents = getFilteredIncidents();
 
   const activeIncidentsFiltered = filteredIncidents.length;
   const activeIncidents = incidents.length;
@@ -1090,6 +1136,7 @@ function updateMetricsCards() {
     traffic.reduce((sum, d) => sum + (Number(d.jamLevel) || 0), 0) /
     traffic.length;
   const healthScore = clamp(Math.round(100 - avgJam * 10), 0, 100);
+
   // Trend vs previous average speed (per refresh)
   let trendText = "";
   let trendDir = "";
@@ -1103,33 +1150,13 @@ function updateMetricsCards() {
     trendDir = diff >= 0 ? "up" : "down";
   }
   state.metrics.prevAvgSpeed = avgSpeed;
-  const sourceText = state.dataMode === "live" ? "Live API" : "Mock Data";
+
+  //const sourceText = state.dataMode === "live" ? "Live API" : "Mock Data";
   const footer = `Updated ${updatedAt}`;
-  function setCard(metricKey, { valueHtml, subText, footer, trend }) {
-    const card = document.querySelector(
-      `.metric-top[data-metric="${metricKey}"]`
-    );
-    if (!card) return;
-    const valueEl = card.querySelector(".value");
-    const subEl = card.querySelector(".metric-sub");
-    const footerEl = card.querySelector(".metric-sub.footer");
-    const trendEl = card.querySelector(".metric-trend");
-    if (valueEl) valueEl.innerHTML = valueHtml;
-    if (subEl) subEl.textContent = subText ?? "";
-    if (footerEl) footerEl.textContent = footer ?? "";
-    if (trendEl) {
-      if (!trend) {
-        trendEl.textContent = "";
-        trendEl.classList.remove("up", "down");
-      } else {
-        trendEl.textContent = trend.text;
-        trendEl.classList.toggle("up", trend.dir === "up");
-        trendEl.classList.toggle("down", trend.dir === "down");
-      }
-    }
-  }
+
   setCard("avgSpeed", {
-    valueHtml: `${avgSpeed} <span class="unit">km/h</span>`,
+    // .toFixed(0) will change Number to String
+    valueHtml: `${avgSpeed.toFixed(0)} <span class="unit">km/h</span>`,
     subText: null,
     footer: footer,
     trend: trendText ? { text: trendText, dir: trendDir } : null,
@@ -1192,6 +1219,30 @@ function updateMetricsCards() {
   dom.metricCards[2].querySelector(".value").textContent = congestedStreets;
   dom.metricCards[3].querySelector(".value").textContent = activeIncidents;
   */
+}
+
+function setCard(metricKey, { valueHtml, subText, footer, trend }) {
+  const card = document.querySelector(
+    `.metric-top[data-metric="${metricKey}"]`
+  );
+  if (!card) return;
+  const valueEl = card.querySelector(".value");
+  const subEl = card.querySelector(".metric-sub");
+  const footerEl = card.querySelector(".metric-sub.footer");
+  const trendEl = card.querySelector(".metric-trend");
+  if (valueEl) valueEl.innerHTML = valueHtml;
+  if (subEl) subEl.textContent = subText ?? "";
+  if (footerEl) footerEl.textContent = footer ?? "";
+  if (trendEl) {
+    if (!trend) {
+      trendEl.textContent = "";
+      trendEl.classList.remove("up", "down");
+    } else {
+      trendEl.textContent = trend.text;
+      trendEl.classList.toggle("up", trend.dir === "up");
+      trendEl.classList.toggle("down", trend.dir === "down");
+    }
+  }
 }
 
 // ================================
@@ -1274,6 +1325,7 @@ function addFilterEffect() {
 // RENDER: INCIDENTS LIST
 // ================================
 function getFilteredIncidents() {
+  // filter out "Unknown" data
   const base = (state.incidents.data ?? []).filter(
     (d) => d.severity !== "Unknown"
   );
@@ -1290,20 +1342,34 @@ function getFilteredIncidents() {
   }
   return list;
 }
+
 function refreshIncidentTypeOptions() {
+  // Goal: populate(填入) incident type filter dropdown based on current data
+
   if (!dom.incidentTypeFilter) return;
+
   const base = (state.incidents.data ?? []).filter(
     (d) => d.severity !== "Unknown"
   );
   const uniqueTypes = Array.from(
     new Set(base.map((d) => d.type).filter(Boolean))
   ).sort();
+
   const current = state.incidents.filters.type ?? "all";
+
+  // innerHTML needs string, so we join the array
+  // insert to select element
   dom.incidentTypeFilter.innerHTML = [
     '<option value="all">All types</option>',
+    // map 會產生一個新陣列
+    // ... to spread the array into individual elements
     ...uniqueTypes.map((t) => `<option value="${t}">${t}</option>`),
   ].join("");
+
   // Keep selection if still valid
+  // current means the previous selected type
+  // uniqueTypes is the newly generated list of types
+  // 如果我前一次的選擇適用這一次的結果，就續用
   const stillValid = current === "all" || uniqueTypes.includes(current);
   state.incidents.filters.type = stillValid ? current : "all";
   dom.incidentTypeFilter.value = state.incidents.filters.type;
@@ -1368,7 +1434,10 @@ function updateIncidentPagination(totalItems) {
 // DATA LOAD
 // ================================
 async function loadDashboardData() {
+  // load traffic, incidents, weather data
+
   const city = getCityConfig();
+
   // Promise.all: run independent network calls in parallel to reduce total wait time.
   // Important: Promise.all rejects if ANY promise rejects. To avoid losing all data due
   // to a single failing request, we wrap each request with a local fallback.
@@ -1381,18 +1450,19 @@ async function loadDashboardData() {
       return fallbackFn();
     }
   };
+
   const trafficPromise =
     state.dataMode === "live"
       ? safe(TomTomAPI.fetchTrafficFlow(city.roads), () =>
           generateMockTrafficFlow(city.roads)
         )
-      : Promise.resolve(generateMockTrafficFlow(city.roads));
+      : Promise.resolve(generateMockTrafficFlow(city.roads)); // wrap to Promise
   const incidentsPromise =
     state.dataMode === "live"
       ? safe(TomTomAPI.fetchIncidents(city.bbox), () =>
           generateMockIncidents(city.roads)
         )
-      : Promise.resolve(generateMockIncidents(city.roads));
+      : Promise.resolve(generateMockIncidents(city.roads)); // wrap to Promise
 
   // Traffic + Incidents
   /*
@@ -1401,6 +1471,8 @@ async function loadDashboardData() {
     TomTomAPI.fetchIncidents(CONFIG.bbox),
   ]);
   */
+
+  // async function returns a Promise
   const weatherPromise = OpenWeatherAPI.fetchWeather(
     city.center[0],
     city.center[1]
@@ -1423,15 +1495,16 @@ async function loadDashboardData() {
 // DASHBOARD UPDATE PIPELINE
 // ================================
 async function initializeDashboard({ flashFilter = false } = {}) {
+  console.log("Initializing dashboard data:", new Date().toLocaleString());
   // avoid no parameter error
   await loadDashboardData();
   sortTrafficData(state.sort);
   updateWeatherWidget();
-  renderTrafficLists(flashFilter);
-  renderIncidentsLists();
   updateMetricsCards();
   updateSpeedTrendChart();
   updateCongestionChart();
+  renderTrafficLists(flashFilter);
+  renderIncidentsLists();
 }
 
 // ================================
@@ -1474,6 +1547,7 @@ function setupEventListeners() {
   });
 
   // City selector
+  // select set selected option to value
   dom.cityDropdown?.addEventListener("change", async () => {
     showLoading();
     setCity(dom.cityDropdown.value);
@@ -1511,13 +1585,13 @@ function setupEventListeners() {
     state.incidents.filters.type = dom.incidentTypeFilter.value;
     state.incidents.page = 1;
     renderIncidentsLists();
-    updateMetricsCards();
+    updateMetricsCards(); // only show filtered count
   });
   dom.incidentRoadSearch?.addEventListener("input", () => {
     state.incidents.filters.roadQuery = dom.incidentRoadSearch.value;
     state.incidents.page = 1;
     renderIncidentsLists();
-    updateMetricsCards();
+    updateMetricsCards(); // only show filtered count
   });
 
   setupTrafficPagination();
@@ -1565,16 +1639,21 @@ function setupIncidentPagination() {
 // BOOTSTRAP
 // ================================
 document.addEventListener("DOMContentLoaded", async () => {
+  // HTML 已經被解析完成，DOM Tree 已經建好
+  // 所有 HTML tags 都變成 DOM nodes
+  // getElementById / querySelector 找得到東西
+
   console.log(
     "Traffic Dashboard Script Loaded: " + new Date().toLocaleString()
   );
   cacheDom();
 
   // Load persisted preferences
-  const savedCity = localStorage.getItem("traffic_dashboard_city");
-  const savedMode = localStorage.getItem("traffic_dashboard_dataMode");
+  const savedCity = localStorage.getItem("traffic_dashboard_city"); // might be null
+  const savedMode = localStorage.getItem("traffic_dashboard_dataMode"); // might be null
   if (savedCity && CONFIG.cities[savedCity]) state.cityKey = savedCity;
-  if (savedMode === "live" || savedMode === "mock") state.dataMode = savedMode;
+  if (savedMode === "live" || savedMode === "mock") state.dataMode = savedMode; // including null check
+
   // Populate city dropdown (in case HTML changes)
   if (dom.cityDropdown) {
     const keys = Object.keys(CONFIG.cities);
@@ -1582,6 +1661,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .map((k) => `<option value="${k}">${k}</option>`)
       .join("");
   }
+
   syncUIFromState();
   setDataMode(state.dataMode); // update label
   setCity(state.cityKey); // update title/tooltip + persist
