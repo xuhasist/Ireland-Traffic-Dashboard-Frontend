@@ -1,0 +1,104 @@
+
+3. map 怎麼顯示交通流量
+
+
+
+// Major Roads & Quays
+        /*
+        { name: "O'Connell Bridge", lat: 53.3478, lng: -6.2589 },
+        { name: "Ha'penny Bridge", lat: 53.3462, lng: -6.2648 },
+        { name: "Capel Street", lat: 53.3485, lng: -6.2685 },
+        { name: "Mary Street", lat: 53.3493, lng: -6.2648 },
+        { name: "Jervis Street", lat: 53.3485, lng: -6.2668 },
+        { name: "Parliament Street", lat: 53.3452, lng: -6.2673 },
+        { name: "D'Olier Street", lat: 53.3468, lng: -6.2575 },
+        { name: "Pearse Street", lat: 53.3443, lng: -6.2498 },
+        { name: "Tara Street", lat: 53.3465, lng: -6.2555 },
+        { name: "Townsend Street", lat: 53.3455, lng: -6.2515 },
+
+        // North Quays (Liffey North Side)
+        { name: "North Quay", lat: 53.3478, lng: -6.2685 },
+        { name: "Eden Quay", lat: 53.3483, lng: -6.2568 },
+        { name: "Custom House Quay", lat: 53.3488, lng: -6.2518 },
+        { name: "George's Quay", lat: 53.3468, lng: -6.2545 },
+
+        // South Quays (Liffey South Side)
+        { name: "Aston Quay", lat: 53.3468, lng: -6.2615 },
+        { name: "Wellington Quay", lat: 53.3462, lng: -6.2658 },
+        { name: "Essex Quay", lat: 53.3455, lng: -6.2688 },
+        { name: "Wood Quay", lat: 53.3448, lng: -6.2708 },
+        { name: "Burgh Quay", lat: 53.3468, lng: -6.2558 },
+        { name: "City Quay", lat: 53.3465, lng: -6.2485 },
+
+        // Temple Bar Area
+        { name: "Temple Bar", lat: 53.3453, lng: -6.2648 },
+        { name: "Fleet Street", lat: 53.3448, lng: -6.2625 },
+        { name: "Crown Alley", lat: 53.3455, lng: -6.2638 },
+        { name: "Merchant's Arch", lat: 53.3462, lng: -6.2655 },
+
+        // St. Stephen's Green Area
+        { name: "St. Stephen's Green North", lat: 53.3388, lng: -6.2603 },
+        { name: "St. Stephen's Green South", lat: 53.3368, lng: -6.2598 },
+        { name: "St. Stephen's Green East", lat: 53.3378, lng: -6.2568 },
+        { name: "St. Stephen's Green West", lat: 53.3378, lng: -6.2628 },
+        { name: "Kildare Street", lat: 53.3408, lng: -6.2545 },
+        { name: "Dawson Street", lat: 53.3398, lng: -6.2588 },
+        { name: "South King Street", lat: 53.3388, lng: -6.2618 },
+
+        // Georgian Dublin
+        { name: "Merrion Square", lat: 53.3398, lng: -6.2498 },
+        { name: "Fitzwilliam Square", lat: 53.3358, lng: -6.2528 },
+        { name: "Mount Street Upper", lat: 53.3368, lng: -6.2458 },
+        { name: "Baggot Street Upper", lat: 53.3328, lng: -6.2468 },
+        { name: "Baggot Street Lower", lat: 53.3368, lng: -6.2528 },
+        { name: "Leeson Street Upper", lat: 53.3298, lng: -6.2548 },
+        { name: "Leeson Street Lower", lat: 53.3348, lng: -6.2558 },
+        { name: "Harcourt Street", lat: 53.3328, lng: -6.2618 },
+
+        // Northside
+        { name: "Dorset Street Upper", lat: 53.3598, lng: -6.2628 },
+        { name: "Dorset Street Lower", lat: 53.3548, lng: -6.2628 },
+        { name: "Gardiner Street Upper", lat: 53.3548, lng: -6.2548 },
+        { name: "Gardiner Street Lower", lat: 53.3508, lng: -6.2548 },
+        { name: "Mountjoy Square", lat: 53.3558, lng: -6.2568 },
+        { name: "North Circular Road", lat: 53.3608, lng: -6.2688 },
+        { name: "Phibsborough Road", lat: 53.3618, lng: -6.2748 },
+        { name: "Constitution Hill", lat: 53.3548, lng: -6.2728 },
+
+        // Southside
+        { name: "South Circular Road", lat: 53.3288, lng: -6.2748 },
+        { name: "Camden Street Upper", lat: 53.3318, lng: -6.2658 },
+        { name: "Camden Street Lower", lat: 53.3348, lng: -6.2648 },
+        { name: "Rathmines Road Upper", lat: 53.3228, lng: -6.2648 },
+        { name: "Rathmines Road Lower", lat: 53.3278, lng: -6.2648 },
+        { name: "Ranelagh Road", lat: 53.3248, lng: -6.2528 },
+
+        // Docklands
+        { name: "North Wall Quay", lat: 53.3495, lng: -6.2398 },
+        { name: "East Wall Road", lat: 53.3508, lng: -6.2358 },
+        { name: "Sheriff Street", lat: 53.3498, lng: -6.2428 },
+        { name: "Mayor Street", lat: 53.3488, lng: -6.2368 },
+        { name: "Grand Canal Dock", lat: 53.3428, lng: -6.2398 },
+        { name: "Sir John Rogerson's Quay", lat: 53.3458, lng: -6.2448 },
+
+        // Phoenix Park & West
+        { name: "Parkgate Street", lat: 53.3468, lng: -6.2888 },
+        { name: "Conyngham Road", lat: 53.3508, lng: -6.3088 },
+        { name: "North Circular Road West", lat: 53.3548, lng: -6.2888 },
+        { name: "Manor Street", lat: 53.3548, lng: -6.2848 },
+        { name: "Stoneybatter", lat: 53.3538, lng: -6.2788 },
+
+        // South Dublin Suburbs (Inner)
+        { name: "Harold's Cross Road", lat: 53.3218, lng: -6.2728 },
+        { name: "Clanbrassil Street", lat: 53.3298, lng: -6.2748 },
+        { name: "South Great George's Street", lat: 53.3428, lng: -6.2638 },
+        { name: "Aungier Street", lat: 53.3398, lng: -6.2648 },
+        { name: "Wexford Street", lat: 53.3358, lng: -6.2658 },
+
+        // Major Arterial Roads
+        { name: "Thomas Street", lat: 53.3428, lng: -6.2828 },
+        { name: "James's Street", lat: 53.3398, lng: -6.2948 },
+        { name: "Clonliffe Road", lat: 53.3618, lng: -6.2468 },
+        { name: "Drumcondra Road", lat: 53.3688, lng: -6.2588 },
+        { name: "Glasnevin Road", lat: 53.3758, lng: -6.2668 },
+        */
