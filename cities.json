@@ -1,0 +1,113 @@
+{
+  "Dublin": {
+    "center": [53.3498, -6.2603],
+    "bbox": {
+      "minLon": -6.3871,
+      "minLat": 53.2964,
+      "maxLon": -6.1335,
+      "maxLat": 53.4032
+    },
+    "roads": [
+      { "name": "O'Connell Street", "lat": 53.3498, "lng": -6.2603 },
+      { "name": "Grafton Street", "lat": 53.3419, "lng": -6.2603 },
+      { "name": "Henry Street", "lat": 53.349, "lng": -6.2628 },
+      { "name": "Dame Street", "lat": 53.3445, "lng": -6.2672 },
+      { "name": "Nassau Street", "lat": 53.3425, "lng": -6.2545 },
+      { "name": "Abbey Street", "lat": 53.3488, "lng": -6.258 },
+      { "name": "Talbot Street", "lat": 53.3505, "lng": -6.2532 },
+      { "name": "Parnell Street", "lat": 53.3528, "lng": -6.2628 },
+      { "name": "College Green", "lat": 53.3445, "lng": -6.2595 },
+      { "name": "Westmoreland Street", "lat": 53.346, "lng": -6.2595 },
+      { "name": "O'Connell Bridge", "lat": 53.3478, "lng": -6.2589 },
+      { "name": "Ha'penny Bridge", "lat": 53.3462, "lng": -6.2648 },
+      { "name": "Capel Street", "lat": 53.3485, "lng": -6.2685 },
+      { "name": "Mary Street", "lat": 53.3493, "lng": -6.2648 },
+      { "name": "Jervis Street", "lat": 53.3485, "lng": -6.2668 },
+      { "name": "Parliament Street", "lat": 53.3452, "lng": -6.2673 }
+    ]
+  },
+  "Cork": {
+    "center": [51.903614, -8.468399],
+    "bbox": {
+      "minLon": -8.595199000000001,
+      "minLat": 51.850213999999994,
+      "maxLon": -8.341598999999999,
+      "maxLat": 51.957014
+    },
+    "roads": [
+      { "name": "Patrick Street", "lat": 51.903614, "lng": -8.468399 },
+      { "name": "Grand Parade", "lat": 51.913614, "lng": -8.463399 },
+      { "name": "Oliver Plunkett Street", "lat": 51.895614, "lng": -8.456399 },
+      { "name": "Washington Street", "lat": 51.915614, "lng": -8.478399 },
+      { "name": "South Mall", "lat": 51.893614, "lng": -8.474399 },
+      { "name": "MacCurtain Street", "lat": 51.909614, "lng": -8.454399 },
+      { "name": "Model Farm Road", "lat": 51.889614, "lng": -8.464399 },
+      { "name": "Western Road", "lat": 51.907614, "lng": -8.482399 },
+      { "name": "N8 (Kinsale Road)", "lat": 51.897614, "lng": -8.480399 },
+      { "name": "North Ring Road", "lat": 51.917614, "lng": -8.468399 }
+    ]
+  },
+  "Galway": {
+    "center": [53.270962, -9.062691],
+    "bbox": {
+      "minLon": -9.189491,
+      "minLat": 53.217562,
+      "maxLon": -8.935890999999998,
+      "maxLat": 53.324361999999994
+    },
+    "roads": [
+      { "name": "Eyre Square", "lat": 53.270962, "lng": -9.062691 },
+      { "name": "Shop Street", "lat": 53.280962, "lng": -9.057691 },
+      { "name": "Quay Street", "lat": 53.262962, "lng": -9.050691 },
+      { "name": "Salthill Road", "lat": 53.282962, "lng": -9.072691 },
+      { "name": "Seamus Quirke Road", "lat": 53.260962, "lng": -9.068691 },
+      { "name": "Headford Road", "lat": 53.276962, "lng": -9.048691 },
+      { "name": "Tuam Road", "lat": 53.256962, "lng": -9.058691 },
+      { "name": "Dublin Road", "lat": 53.274962, "lng": -9.076691 },
+      { "name": "University Road", "lat": 53.264962, "lng": -9.074691 },
+      { "name": "Newcastle Road", "lat": 53.284962, "lng": -9.062691 }
+    ]
+  },
+  "Limerick": {
+    "center": [52.668018, -8.630498],
+    "bbox": {
+      "minLon": -8.757297999999999,
+      "minLat": 52.61461799999999,
+      "maxLon": -8.503698,
+      "maxLat": 52.721418
+    },
+    "roads": [
+      { "name": "O'Connell Street", "lat": 52.668018, "lng": -8.630498 },
+      { "name": "Henry Street", "lat": 52.678018, "lng": -8.625498 },
+      { "name": "Patrick Street", "lat": 52.660018, "lng": -8.618498 },
+      { "name": "William Street", "lat": 52.680018, "lng": -8.640498 },
+      { "name": "Dublin Road", "lat": 52.658018, "lng": -8.636498 },
+      { "name": "Ennis Road", "lat": 52.674018, "lng": -8.616498 },
+      { "name": "Dock Road", "lat": 52.654018, "lng": -8.626498 },
+      { "name": "Ballinacurra Road", "lat": 52.672018, "lng": -8.644498 },
+      { "name": "Ballysimon Road", "lat": 52.662018, "lng": -8.642498 },
+      { "name": "Shannon Bridge", "lat": 52.682018, "lng": -8.630498 }
+    ]
+  },
+  "Waterford": {
+    "center": [52.25833, -7.11194],
+    "bbox": {
+      "minLon": -7.23874,
+      "minLat": 52.204930000000004,
+      "maxLon": -6.9851399999999995,
+      "maxLat": 52.31173
+    },
+    "roads": [
+      { "name": "The Quay", "lat": 52.25833, "lng": -7.11194 },
+      { "name": "Merchants Quay", "lat": 52.26833, "lng": -7.10694 },
+      { "name": "Cork Road (N25)", "lat": 52.25033, "lng": -7.09994 },
+      { "name": "Tramore Road (R675)", "lat": 52.27033, "lng": -7.12194 },
+      { "name": "Dunmore Road", "lat": 52.24833, "lng": -7.11794 },
+      { "name": "Farronshoneen Roundabout", "lat": 52.26433, "lng": -7.09794 },
+      { "name": "O'Connell Street", "lat": 52.24433, "lng": -7.10794 },
+      { "name": "Parnell Street", "lat": 52.26233, "lng": -7.12594 },
+      { "name": "Johnstown", "lat": 52.25233, "lng": -7.12394 },
+      { "name": "Gracedieu Road", "lat": 52.27233, "lng": -7.11194 }
+    ]
+  }
+}

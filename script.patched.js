@@ -5,338 +5,117 @@ const CONFIG = {
   defaultCity: "Dublin",
   cities: {
     Dublin: {
-      center: [53.3493795, -6.2605593],
+      center: [53.3498, -6.2603], // 都柏林市中心座標
       bbox: {
-        minLon: -6.3870259,
-        minLat: 53.2987342,
-        maxLon: -6.1148829,
-        maxLat: 53.4105416,
+        minLon: -6.3871, // 西邊界
+        minLat: 53.2964, // 南邊界
+        maxLon: -6.1335, // 東邊界
+        maxLat: 53.4032, // 北邊界
       },
       roads: [
-        {
-          name: "O'Connell Street",
-          lat: 53.3517847,
-          lng: -6.2613144,
-        },
-        {
-          name: "Grafton Street",
-          lat: 53.3399977,
-          lng: -6.2607633,
-        },
-        {
-          name: "Henry Street",
-          lat: 53.3494688,
-          lng: -6.262408,
-        },
-        {
-          name: "Dame Street",
-          lat: 53.3442297,
-          lng: -6.2628607,
-        },
-        {
-          name: "Nassau Street",
-          lat: 53.3432662,
-          lng: -6.2592181,
-        },
-        {
-          name: "Abbey Street",
-          lat: 53.3485609,
-          lng: -6.2581508,
-        },
-        {
-          name: "Talbot Street",
-          lat: 53.3513825,
-          lng: -6.2506326,
-        },
-        {
-          name: "Parnell Street",
-          lat: 53.3534357,
-          lng: -6.2595439,
-        },
-        {
-          name: "College Green",
-          lat: 53.3443543,
-          lng: -6.2597956,
-        },
-        {
-          name: "Westmoreland Street",
-          lat: 53.346374,
-          lng: -6.2591309,
-        },
-        {
-          name: "O'Connell Bridge",
-          lat: 53.3472655,
-          lng: -6.2591043,
-        },
-        {
-          name: "Ha'penny Bridge",
-          lat: 53.3463273,
-          lng: -6.2630949,
-        },
-        {
-          name: "Capel Street",
-          lat: 53.3482491,
-          lng: -6.2687204,
-        },
-        {
-          name: "Mary Street",
-          lat: 53.3485108,
-          lng: -6.2684277,
-        },
-        {
-          name: "Jervis Street",
-          lat: 53.3477388,
-          lng: -6.2662613,
-        },
-        {
-          name: "Parliament Street",
-          lat: 53.3445312,
-          lng: -6.2673698,
-        },
+        // City Centre - Major Shopping Streets
+        { name: "O'Connell Street", lat: 53.3498, lng: -6.2603 },
+        { name: "Grafton Street", lat: 53.3419, lng: -6.2603 },
+        { name: "Henry Street", lat: 53.349, lng: -6.2628 },
+        { name: "Dame Street", lat: 53.3445, lng: -6.2672 },
+        { name: "Nassau Street", lat: 53.3425, lng: -6.2545 },
+        { name: "Abbey Street", lat: 53.3488, lng: -6.258 },
+        { name: "Talbot Street", lat: 53.3505, lng: -6.2532 },
+        { name: "Parnell Street", lat: 53.3528, lng: -6.2628 },
+        { name: "College Green", lat: 53.3445, lng: -6.2595 },
+        { name: "Westmoreland Street", lat: 53.346, lng: -6.2595 },
+
+        // Major Roads & Quays
+        { name: "O'Connell Bridge", lat: 53.3478, lng: -6.2589 },
+        { name: "Ha'penny Bridge", lat: 53.3462, lng: -6.2648 },
+        { name: "Capel Street", lat: 53.3485, lng: -6.2685 },
+        { name: "Mary Street", lat: 53.3493, lng: -6.2648 },
+        { name: "Jervis Street", lat: 53.3485, lng: -6.2668 },
+        { name: "Parliament Street", lat: 53.3452, lng: -6.2673 },
       ],
     },
     Cork: {
-      center: [51.8985136, -8.4726423],
+      center: [51.903614, -8.468399],
       bbox: {
-        minLon: -8.6378543,
-        minLat: 51.8273102,
-        maxLon: -8.3551315,
-        maxLat: 51.9701415,
+        minLon: -8.595199000000001,
+        minLat: 51.850213999999994,
+        maxLon: -8.341598999999999,
+        maxLat: 51.957014,
       },
       roads: [
-        {
-          name: "Patrick Street",
-          lat: 52.137841,
-          lng: -8.273775,
-        },
-        {
-          name: "Grand Parade",
-          lat: 51.8965952,
-          lng: -8.4746255,
-        },
-        {
-          name: "Oliver Plunkett Street",
-          lat: 51.8975744,
-          lng: -8.4725112,
-        },
-        {
-          name: "Washington Street",
-          lat: 51.8973526,
-          lng: -8.4808903,
-        },
-        {
-          name: "South Mall",
-          lat: 51.8962452,
-          lng: -8.4735832,
-        },
-        {
-          name: "MacCurtain Street",
-          lat: 51.9014929,
-          lng: -8.468289,
-        },
-        {
-          name: "Model Farm Road",
-          lat: 51.8915565,
-          lng: -8.5678511,
-        },
-        {
-          name: "Western Road",
-          lat: 51.8963622,
-          lng: -8.4850313,
-        },
-        {
-          name: "N8 (Kinsale Road)",
-          lat: 51.8792963,
-          lng: -8.4690504,
-        },
-        {
-          name: "North Ring Road",
-          lat: 51.9159377,
-          lng: -8.4294554,
-        },
+        { name: "Patrick Street", lat: 51.903614, lng: -8.468399 },
+        { name: "Grand Parade", lat: 51.913614, lng: -8.463399 },
+        { name: "Oliver Plunkett Street", lat: 51.895614, lng: -8.456399 },
+        { name: "Washington Street", lat: 51.915614, lng: -8.478399 },
+        { name: "South Mall", lat: 51.893614, lng: -8.474399 },
+        { name: "MacCurtain Street", lat: 51.909614, lng: -8.454399 },
+        { name: "Model Farm Road", lat: 51.889614, lng: -8.464399 },
+        { name: "Western Road", lat: 51.907614, lng: -8.482399 },
+        { name: "N8 (Kinsale Road)", lat: 51.897614, lng: -8.480399 },
+        { name: "North Ring Road", lat: 51.917614, lng: -8.468399 },
       ],
     },
     Galway: {
-      center: [53.2744122, -9.0490601],
+      center: [53.270962, -9.062691],
       bbox: {
-        minLon: -9.1426901,
-        minLat: 53.2485189,
-        maxLon: -8.9548381,
-        maxLat: 53.3197423,
+        minLon: -9.189491,
+        minLat: 53.217562,
+        maxLon: -8.935890999999998,
+        maxLat: 53.324361999999994,
       },
       roads: [
-        {
-          name: "Eyre Square",
-          lat: 53.2743794,
-          lng: -9.0492256,
-        },
-        {
-          name: "Shop Street",
-          lat: 53.2724335,
-          lng: -9.0532516,
-        },
-        {
-          name: "Quay Street",
-          lat: 53.2710451,
-          lng: -9.0541484,
-        },
-        {
-          name: "Salthill Road",
-          lat: 53.2682304,
-          lng: -9.0660935,
-        },
-        {
-          name: "Seamus Quirke Road",
-          lat: 53.2747846,
-          lng: -9.0780474,
-        },
-        {
-          name: "Headford Road",
-          lat: 53.2842553,
-          lng: -9.0467527,
-        },
-        {
-          name: "Tuam Road",
-          lat: 53.2860913,
-          lng: -9.0321624,
-        },
-        {
-          name: "Dublin Road",
-          lat: 53.2748356,
-          lng: -8.9883358,
-        },
-        {
-          name: "University Road",
-          lat: 53.2755893,
-          lng: -9.0559665,
-        },
-        {
-          name: "Newcastle Road",
-          lat: 53.2734339,
-          lng: -9.0626023,
-        },
+        { name: "Eyre Square", lat: 53.270962, lng: -9.062691 },
+        { name: "Shop Street", lat: 53.280962, lng: -9.057691 },
+        { name: "Quay Street", lat: 53.262962, lng: -9.050691 },
+        { name: "Salthill Road", lat: 53.282962, lng: -9.072691 },
+        { name: "Seamus Quirke Road", lat: 53.260962, lng: -9.068691 },
+        { name: "Headford Road", lat: 53.276962, lng: -9.048691 },
+        { name: "Tuam Road", lat: 53.256962, lng: -9.058691 },
+        { name: "Dublin Road", lat: 53.274962, lng: -9.076691 },
+        { name: "University Road", lat: 53.264962, lng: -9.074691 },
+        { name: "Newcastle Road", lat: 53.284962, lng: -9.062691 },
       ],
     },
     Limerick: {
-      center: [52.661252, -8.6301239],
+      center: [52.668018, -8.630498],
       bbox: {
-        minLon: -8.8070765,
-        minLat: 52.5721036,
-        maxLon: -8.4425444,
-        maxLat: 52.757379,
+        minLon: -8.757297999999999,
+        minLat: 52.61461799999999,
+        maxLon: -8.503698,
+        maxLat: 52.721418,
       },
       roads: [
-        {
-          name: "O'Connell Street",
-          lat: 52.6620968,
-          lng: -8.6285423,
-        },
-        {
-          name: "Henry Street",
-          lat: 52.6592854,
-          lng: -8.6333626,
-        },
-        {
-          name: "Patrick Street",
-          lat: 52.6650432,
-          lng: -8.6252641,
-        },
-        {
-          name: "William Street",
-          lat: 52.6630664,
-          lng: -8.6247461,
-        },
-        {
-          name: "Dublin Road",
-          lat: 52.6637059,
-          lng: -8.5971254,
-        },
-        {
-          name: "Ennis Road",
-          lat: 52.6692112,
-          lng: -8.6549146,
-        },
-        {
-          name: "Dock Road",
-          lat: 52.6604975,
-          lng: -8.6345878,
-        },
-        {
-          name: "Ballinacurra Road",
-          lat: 52.6454802,
-          lng: -8.6435867,
-        },
-        {
-          name: "Ballysimon Road",
-          lat: 52.6507797,
-          lng: -8.5888316,
-        },
-        {
-          name: "Shannon Bridge",
-          lat: 52.6624331,
-          lng: -8.6353991,
-        },
+        { name: "O'Connell Street", lat: 52.668018, lng: -8.630498 },
+        { name: "Henry Street", lat: 52.678018, lng: -8.625498 },
+        { name: "Patrick Street", lat: 52.660018, lng: -8.618498 },
+        { name: "William Street", lat: 52.680018, lng: -8.640498 },
+        { name: "Dublin Road", lat: 52.658018, lng: -8.636498 },
+        { name: "Ennis Road", lat: 52.674018, lng: -8.616498 },
+        { name: "Dock Road", lat: 52.654018, lng: -8.626498 },
+        { name: "Ballinacurra Road", lat: 52.672018, lng: -8.644498 },
+        { name: "Ballysimon Road", lat: 52.662018, lng: -8.642498 },
+        { name: "Shannon Bridge", lat: 52.682018, lng: -8.630498 },
       ],
     },
     Waterford: {
-      center: [52.2609997, -7.1119081],
+      center: [52.25833, -7.11194],
       bbox: {
-        minLon: -7.1869522,
-        minLat: 52.2102427,
-        maxLon: -7.0338797,
-        maxLat: 52.2798229,
+        minLon: -7.23874,
+        minLat: 52.204930000000004,
+        maxLon: -6.9851399999999995,
+        maxLat: 52.31173,
       },
       roads: [
-        {
-          name: "The Quay",
-          lat: 52.2393689,
-          lng: -6.9725063,
-        },
-        {
-          name: "Merchants Quay",
-          lat: 52.2636951,
-          lng: -7.1178996,
-        },
-        {
-          name: "Cork Road (N25)",
-          lat: 52.2452381,
-          lng: -7.1315037,
-        },
-        {
-          name: "Tramore Road (R675)",
-          lat: 52.2330234,
-          lng: -7.1215556,
-        },
-        {
-          name: "Dunmore Road",
-          lat: 52.2568942,
-          lng: -7.1024133,
-        },
-        {
-          name: "Farronshoneen Roundabout",
-          lat: 52.2411244,
-          lng: -7.0898485,
-        },
-        {
-          name: "O'Connell Street",
-          lat: 52.2618159,
-          lng: -7.1137506,
-        },
-        {
-          name: "Parnell Street",
-          lat: 52.2581449,
-          lng: -7.1098037,
-        },
-        {
-          name: "Johnstown",
-          lat: 52.2137642,
-          lng: -7.2713749,
-        },
-        {
-          name: "Gracedieu Road",
-          lat: 52.2622996,
-          lng: -7.1246596,
-        },
+        { name: "The Quay", lat: 52.25833, lng: -7.11194 },
+        { name: "Merchants Quay", lat: 52.26833, lng: -7.10694 },
+        { name: "Cork Road (N25)", lat: 52.25033, lng: -7.09994 },
+        { name: "Tramore Road (R675)", lat: 52.27033, lng: -7.12194 },
+        { name: "Dunmore Road", lat: 52.24833, lng: -7.11794 },
+        { name: "Farronshoneen Roundabout", lat: 52.26433, lng: -7.09794 },
+        { name: "O'Connell Street", lat: 52.24433, lng: -7.10794 },
+        { name: "Parnell Street", lat: 52.26233, lng: -7.12594 },
+        { name: "Johnstown", lat: 52.25233, lng: -7.12394 },
+        { name: "Gracedieu Road", lat: 52.27233, lng: -7.11194 },
       ],
     },
   },
@@ -365,6 +144,9 @@ const CONFIG = {
 // ================================
 const state = {
   map: null,
+  mapLayers: {
+    traffic: null,
+  },
   autoUpdateTimer: null,
   sort: "worst",
   cityKey: CONFIG.defaultCity,
@@ -734,8 +516,8 @@ function generateMockTrafficFlow() {
               {
                 linkId: `link_${index}`,
                 points: [
-                  //{ lat: road.lat, lng: road.lng },
-                  //{ lat: road.lat + 0.002, lng: road.lng + 0.002 },
+                  { lat: road.lat, lng: road.lng },
+                  { lat: road.lat + 0.002, lng: road.lng + 0.002 },
                 ],
               },
             ],
@@ -746,7 +528,7 @@ function generateMockTrafficFlow() {
           speedUncapped: currentSpeed,
           freeFlow: freeFlowSpeed,
           jamFactor: jamFactor,
-          //confidence: (0.8 + Math.random() * 0.2).toFixed(2),
+          confidence: (0.8 + Math.random() * 0.2).toFixed(2),
           traversability: "open",
         },
       };
@@ -892,16 +674,25 @@ class TomTomAPI {
           links: [
             {
               points: (() => {
-                // immediately invoked function expression (IIFE)
                 const coordArr = flow?.coordinates?.coordinate;
                 const parsed = Array.isArray(coordArr)
-                  ? coordArr.map((c) => ({
-                      lat: Number(c.latitude),
-                      lng: Number(c.longitude),
-                    }))
+                  ? coordArr
+                      .map((c) => ({
+                        lat: Number(c.latitude ?? c.lat),
+                        lng: Number(c.longitude ?? c.lon ?? c.lng),
+                      }))
+                      .filter(
+                        (p) => Number.isFinite(p.lat) && Number.isFinite(p.lng),
+                      )
                   : [];
+
                 // Fallback if API did not return a usable geometry
-                return parsed.length >= 2 ? parsed : [];
+                return parsed.length >= 2
+                  ? parsed
+                  : [
+                      { lat, lng },
+                      { lat: lat + 0.002, lng: lng + 0.002 },
+                    ];
               })(),
             },
           ],
@@ -911,7 +702,7 @@ class TomTomAPI {
         speed: Math.round(currentSpeed),
         freeFlow: freeFlow,
         jamFactor: Number(clamp(Number(jamFactor.toFixed(1)), 0, 10)),
-        //confidence: flow.confidence,
+        confidence: flow.confidence ?? 0.85, // default to 0.85 if null
         traversability: flow.roadClosure ? "closed" : "open",
       },
     };
@@ -1131,8 +922,10 @@ function getTrafficColor(jamFactor, colors) {
   if (jf <= CONFIG.thresholds.moderateMax) return colors.moderate;
   return colors.heavy;
 }
+
 function updateTrafficMap(flowResults) {
   if (!state.map || !state.mapLayers?.traffic) return;
+
   // Read CSS vars once (fallback to hardcoded)
   const css = getComputedStyle(document.documentElement);
   const colors = {
@@ -1148,7 +941,7 @@ function updateTrafficMap(flowResults) {
     const jam = seg?.currentFlow?.jamFactor ?? 0;
     const speed = seg?.currentFlow?.speed ?? 0;
     const free = seg?.currentFlow?.freeFlow ?? 0;
-    //const confidence = seg?.currentFlow?.confidence ?? null;
+    const confidence = seg?.currentFlow?.confidence ?? null;
     const traversability = seg?.currentFlow?.traversability ?? "open";
 
     links.forEach((link) => {
@@ -1158,37 +951,29 @@ function updateTrafficMap(flowResults) {
       const latlngs = pts
         .map((p) => [Number(p.lat), Number(p.lng)])
         .filter(([la, ln]) => Number.isFinite(la) && Number.isFinite(ln));
-
       if (latlngs.length < 2) return;
 
       const color = getTrafficColor(jam, colors);
+
       const poly = L.polyline(latlngs, {
         color,
-        weight: 3,
+        weight: 6,
         opacity: 0.85,
-        dashArray: traversability === "closed" ? "6 6" : null, // dashed if closed
+        dashArray: traversability === "closed" ? "6 6" : null,
       });
 
-      /*
-      const outline = L.polyline(latlngs, {
-        color: "#111", // 外框顏色
-        weight: 5, // 外框粗
-        opacity: 0.65,
-        lineCap: "round",
-        lineJoin: "round",
-        interactive: false,
-      }).addTo(state.mapLayers.traffic);
-      */
-
       const title = seg?.location?.description ?? "Road segment";
-
-      // click popup content
       const popupHtml = `
         <div style="min-width:180px">
           <div style="font-weight:600;margin-bottom:4px">${title}</div>
           <div>Speed: <b>${speed}</b> km/h</div>
           <div>Free flow: <b>${free}</b> km/h</div>
-          <div>Jam: <b>${Number(jam)}</b> / 10</div>
+          <div>Jam: <b>${Number(jam).toFixed(1)}</b> / 10</div>
+          ${
+            confidence !== null
+              ? `<div>Confidence: <b>${Number(confidence).toFixed(2)}</b></div>`
+              : ""
+          }
           ${
             traversability === "closed"
               ? `<div style="margin-top:6px;color:#b91c1c">Road closed</div>`
@@ -1373,7 +1158,7 @@ function toTrafficListItem(flowResult) {
     speed: flowResult.currentFlow.speed,
     status: status,
     freeFlow: flowResult.currentFlow.freeFlow,
-    //confidence: flowResult.currentFlow.confidence,
+    confidence: flowResult.currentFlow.confidence,
   };
 }
 
@@ -1801,7 +1586,6 @@ async function loadDashboardData() {
   state.weather = weather;
 
   // Transform
-  //state.traffic.data = (trafficFlow?.results ?? []).map(toTrafficListItem);
   state.traffic.raw = trafficFlow?.results ?? [];
   state.traffic.data = state.traffic.raw.map(toTrafficListItem);
   state.incidents.data = (incidents?.results ?? []).map(toIncidentListItem);
