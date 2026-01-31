@@ -1,0 +1,522 @@
+{
+  "Dublin": {
+    "roads": [
+      {
+        "name": "O'Connell Street",
+        "lat": 53.3500055,
+        "lng": -6.2602186
+      },
+      {
+        "name": "Grafton Street",
+        "lat": 53.3419797,
+        "lng": -6.2599468
+      },
+      {
+        "name": "Dame Street",
+        "lat": 53.3442258,
+        "lng": -6.2628153
+      },
+      {
+        "name": "Nassau Street",
+        "lat": 53.3429149,
+        "lng": -6.2577692
+      },
+      {
+        "name": "Abbey Street",
+        "lat": 53.3878446,
+        "lng": -6.0650689
+      },
+      {
+        "name": "Talbot Street",
+        "lat": 53.3507529,
+        "lng": -6.2543564
+      },
+      {
+        "name": "Parnell Street",
+        "lat": 53.2797519,
+        "lng": -6.137633
+      },
+      {
+        "name": "College Green",
+        "lat": 53.3444517,
+        "lng": -6.2586745
+      },
+      {
+        "name": "Westmoreland Street",
+        "lat": 53.3460026,
+        "lng": -6.2591231
+      },
+      {
+        "name": "Capel Street",
+        "lat": 53.3486092,
+        "lng": -6.2688424
+      },
+      {
+        "name": "Jervis Street",
+        "lat": 53.3485107,
+        "lng": -6.2665743
+      },
+      {
+        "name": "Parliament Street",
+        "lat": 53.3449581,
+        "lng": -6.267504
+      },
+      {
+        "name": "Pearse Street",
+        "lat": 53.3436612,
+        "lng": -6.246843
+      },
+      {
+        "name": "Dorset Street",
+        "lat": 53.3551986,
+        "lng": -6.2659875
+      },
+      {
+        "name": "Baggot Street",
+        "lat": 53.33352,
+        "lng": -6.2442644
+      },
+      {
+        "name": "Merrion Square",
+        "lat": 53.3390877,
+        "lng": -6.2518231
+      },
+      {
+        "name": "St Stephen's Green",
+        "lat": 53.3378447,
+        "lng": -6.2624371
+      },
+      {
+        "name": "Thomas Street",
+        "lat": 53.3432182,
+        "lng": -6.2813315
+      },
+      {
+        "name": "James's Street",
+        "lat": 53.341235,
+        "lng": -6.2928213
+      },
+      {
+        "name": "North Circular Road",
+        "lat": 53.3572566,
+        "lng": -6.2764811
+      }
+    ]
+  },
+  "Cork": {
+    "roads": [
+      {
+        "name": "St Patrick's Street",
+        "lat": 51.8998213,
+        "lng": -8.4706852
+      },
+      {
+        "name": "Grand Parade",
+        "lat": 51.8970904,
+        "lng": -8.4748797
+      },
+      {
+        "name": "South Mall",
+        "lat": 51.8970062,
+        "lng": -8.4706484
+      },
+      {
+        "name": "Oliver Plunkett Street",
+        "lat": 51.8978719,
+        "lng": -8.4710874
+      },
+      {
+        "name": "Washington Street",
+        "lat": 51.8976177,
+        "lng": -8.4783036
+      },
+      {
+        "name": "Patrick's Quay",
+        "lat": 51.900749,
+        "lng": -8.466594
+      },
+      {
+        "name": "Anderson's Quay",
+        "lat": 51.8996642,
+        "lng": -8.4647778
+      },
+      {
+        "name": "MacCurtain Street",
+        "lat": 51.9014339,
+        "lng": -8.4676389
+      },
+      {
+        "name": "North Main Street",
+        "lat": 51.8997535,
+        "lng": -8.4784323
+      },
+      {
+        "name": "South Main Street",
+        "lat": 51.8969922,
+        "lng": -8.4769257
+      },
+      {
+        "name": "Western Road",
+        "lat": 51.8948195,
+        "lng": -8.4938088
+      },
+      {
+        "name": "Sheares Street",
+        "lat": 51.8982219,
+        "lng": -8.4804866
+      },
+      {
+        "name": "Lower Glanmire Road",
+        "lat": 51.8981756,
+        "lng": -8.4481124
+      },
+      {
+        "name": "Douglas Road",
+        "lat": 51.8819691,
+        "lng": -8.456813
+      },
+      {
+        "name": "Blackrock Road",
+        "lat": 51.895593,
+        "lng": -8.4335684
+      },
+      {
+        "name": "Model Farm Road",
+        "lat": 51.8889303,
+        "lng": -8.5315389
+      },
+      {
+        "name": "Bishopstown Road",
+        "lat": 51.879983,
+        "lng": -8.5159669
+      },
+      {
+        "name": "Wilton Road",
+        "lat": 51.8848327,
+        "lng": -8.5069466
+      },
+      {
+        "name": "Carrigrohane Road",
+        "lat": 51.8933932,
+        "lng": -8.5114445
+      },
+      {
+        "name": "Tivoli Road",
+        "lat": 51.8998278,
+        "lng": -8.4410992
+      }
+    ]
+  },
+  "Galway": {
+    "roads": [
+      {
+        "name": "Eyre Square",
+        "lat": 53.2742992,
+        "lng": -9.0480804
+      },
+      {
+        "name": "Shop Street",
+        "lat": 53.27272,
+        "lng": -9.0527474
+      },
+      {
+        "name": "Quay Street",
+        "lat": 53.2710471,
+        "lng": -9.0541482
+      },
+      {
+        "name": "Forster Street",
+        "lat": 53.2754796,
+        "lng": -9.0436268
+      },
+      {
+        "name": "Eglinton Street",
+        "lat": 53.274442,
+        "lng": -9.0520911
+      },
+      {
+        "name": "University Road",
+        "lat": 53.2781682,
+        "lng": -9.0595893
+      },
+      {
+        "name": "Newcastle Road",
+        "lat": 53.2750414,
+        "lng": -9.0665582
+      },
+      {
+        "name": "Headford Road",
+        "lat": 53.2964602,
+        "lng": -9.0353408
+      },
+      {
+        "name": "Tuam Road",
+        "lat": 53.3139822,
+        "lng": -8.9859976
+      },
+      {
+        "name": "Dublin Road",
+        "lat": 53.2775354,
+        "lng": -9.0079656
+      },
+      {
+        "name": "Seamus Quirke Road",
+        "lat": 53.277183,
+        "lng": -9.0733587
+      },
+      {
+        "name": "Bohermore",
+        "lat": 53.2796881,
+        "lng": -9.0424331
+      },
+      {
+        "name": "Wellpark Road",
+        "lat": 53.2845255,
+        "lng": -9.027498
+      },
+      {
+        "name": "Lough Atalia Road",
+        "lat": 53.2756275,
+        "lng": -9.0411003
+      },
+      {
+        "name": "Dock Road",
+        "lat": 53.2692439,
+        "lng": -9.0464718
+      },
+      {
+        "name": "Fr Griffin Road",
+        "lat": 53.2669898,
+        "lng": -9.0650045
+      },
+      {
+        "name": "Upper Salthill Road",
+        "lat": 53.2574536,
+        "lng": -9.0908922
+      },
+      {
+        "name": "Lower Salthill Road",
+        "lat": 53.2666885,
+        "lng": -9.069757
+      },
+      {
+        "name": "The Promenade",
+        "lat": 53.2609179,
+        "lng": -9.0721666
+      },
+      {
+        "name": "Bóthar na dTreabh",
+        "lat": 53.2911528,
+        "lng": -8.9852097
+      }
+    ]
+  },
+  "Limerick": {
+    "roads": [
+      {
+        "name": "O'Connell Street",
+        "lat": 52.6609548,
+        "lng": -8.6297398
+      },
+      {
+        "name": "William Street",
+        "lat": 52.6624519,
+        "lng": -8.6231157
+      },
+      {
+        "name": "Patrick Street",
+        "lat": 52.665167,
+        "lng": -8.6251136
+      },
+      {
+        "name": "Henry Street",
+        "lat": 52.6609156,
+        "lng": -8.6318215
+      },
+      {
+        "name": "Cecil Street",
+        "lat": 52.6612856,
+        "lng": -8.6275123
+      },
+      {
+        "name": "Shannon Street",
+        "lat": 52.6628099,
+        "lng": -8.6292033
+      },
+      {
+        "name": "Thomas Street",
+        "lat": 52.6625483,
+        "lng": -8.6255861
+      },
+      {
+        "name": "Mulgrave Street",
+        "lat": 52.6578333,
+        "lng": -8.6145103
+      },
+      {
+        "name": "Roxboro Road",
+        "lat": 52.6504675,
+        "lng": -8.6123754
+      },
+      {
+        "name": "Dublin Road",
+        "lat": 52.6637985,
+        "lng": -8.587409
+      },
+      {
+        "name": "Ennis Road",
+        "lat": 52.674621,
+        "lng": -8.671037
+      },
+      {
+        "name": "Dock Road",
+        "lat": 52.6608518,
+        "lng": -8.6341278
+      },
+      {
+        "name": "Childers Road",
+        "lat": 52.6496603,
+        "lng": -8.6125357
+      },
+      {
+        "name": "Ballinacurra Road",
+        "lat": 52.6463724,
+        "lng": -8.6413299
+      },
+      {
+        "name": "South Circular Road",
+        "lat": 52.648472,
+        "lng": -8.6425477
+      },
+      {
+        "name": "Clare Street",
+        "lat": 52.6674389,
+        "lng": -8.6135825
+      },
+      {
+        "name": "Parnell Street",
+        "lat": 52.6588282,
+        "lng": -8.6256451
+      },
+      {
+        "name": "Barrington Street",
+        "lat": 52.6583205,
+        "lng": -8.6313769
+      },
+      {
+        "name": "Newenham Street",
+        "lat": 52.6587125,
+        "lng": -8.6328608
+      },
+      {
+        "name": "Catherine Street",
+        "lat": 52.6610856,
+        "lng": -8.6277143
+      }
+    ]
+  },
+  "Waterford": {
+    "roads": [
+      {
+        "name": "The Quay",
+        "lat": 52.239142,
+        "lng": -6.9716885
+      },
+      {
+        "name": "Merchant's Quay",
+        "lat": 52.2637538,
+        "lng": -7.1181641
+      },
+      {
+        "name": "Parade Quay",
+        "lat": 52.2609013,
+        "lng": -7.1059876
+      },
+      {
+        "name": "O'Connell Street",
+        "lat": 52.2627351,
+        "lng": -7.1164942
+      },
+      {
+        "name": "Patrick Street",
+        "lat": 52.2600527,
+        "lng": -7.1134549
+      },
+      {
+        "name": "John Street",
+        "lat": 52.2574643,
+        "lng": -7.1116369
+      },
+      {
+        "name": "Michael Street",
+        "lat": 52.2592555,
+        "lng": -7.111895
+      },
+      {
+        "name": "Barronstrand Street",
+        "lat": 52.2611484,
+        "lng": -7.1116855
+      },
+      {
+        "name": "High Street",
+        "lat": 52.2606576,
+        "lng": -7.1092893
+      },
+      {
+        "name": "Catherine Street",
+        "lat": 52.2586775,
+        "lng": -7.1079458
+      },
+      {
+        "name": "Bridge Street",
+        "lat": 52.2636579,
+        "lng": -7.1191743
+      },
+      {
+        "name": "The Mall",
+        "lat": 52.2597321,
+        "lng": -7.1062755
+      },
+      {
+        "name": "Dunmore Road",
+        "lat": 52.243175,
+        "lng": -7.0754871
+      },
+      {
+        "name": "Cork Road",
+        "lat": 52.2469398,
+        "lng": -7.1517077
+      },
+      {
+        "name": "Dublin Road",
+        "lat": 52.1546054,
+        "lng": -8.2781502
+      },
+      {
+        "name": "Tramore Road",
+        "lat": 52.227614,
+        "lng": -7.1242068
+      },
+      {
+        "name": "Ballybricken",
+        "lat": 52.2569066,
+        "lng": -7.1200873
+      },
+      {
+        "name": "Manor Street",
+        "lat": 52.2546145,
+        "lng": -7.1139747
+      },
+      {
+        "name": "New Street",
+        "lat": 52.2581899,
+        "lng": -7.1131289
+      },
+      {
+        "name": "Poleberry",
+        "lat": 52.2522768,
+        "lng": -7.112351
+      }
+    ]
+  }
+}

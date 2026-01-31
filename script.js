@@ -15,23 +15,18 @@ const CONFIG = {
       roads: [
         {
           name: "O'Connell Street",
-          lat: 53.3517847,
-          lng: -6.2613144,
+          lat: 53.3509547,
+          lng: -6.2605881,
         },
         {
           name: "Grafton Street",
-          lat: 53.3399977,
-          lng: -6.2607633,
-        },
-        {
-          name: "Henry Street",
-          lat: 53.3494688,
-          lng: -6.262408,
+          lat: 53.3420874,
+          lng: -6.2598865,
         },
         {
           name: "Dame Street",
-          lat: 53.3442297,
-          lng: -6.2628607,
+          lat: 53.3441751,
+          lng: -6.2646484,
         },
         {
           name: "Nassau Street",
@@ -45,33 +40,23 @@ const CONFIG = {
         },
         {
           name: "Talbot Street",
-          lat: 53.3513825,
-          lng: -6.2506326,
+          lat: 53.3504353,
+          lng: -6.2563102,
         },
         {
           name: "Parnell Street",
-          lat: 53.3534357,
-          lng: -6.2595439,
+          lat: 53.3501473,
+          lng: -6.2670481,
         },
         {
           name: "College Green",
-          lat: 53.3443543,
-          lng: -6.2597956,
+          lat: 53.3445818,
+          lng: -6.2595687,
         },
         {
           name: "Westmoreland Street",
-          lat: 53.346374,
-          lng: -6.2591309,
-        },
-        {
-          name: "O'Connell Bridge",
-          lat: 53.3472655,
-          lng: -6.2591043,
-        },
-        {
-          name: "Ha'penny Bridge",
-          lat: 53.3463273,
-          lng: -6.2630949,
+          lat: 53.3454921,
+          lng: -6.259148,
         },
         {
           name: "Capel Street",
@@ -79,19 +64,54 @@ const CONFIG = {
           lng: -6.2687204,
         },
         {
-          name: "Mary Street",
-          lat: 53.3485108,
-          lng: -6.2684277,
-        },
-        {
           name: "Jervis Street",
-          lat: 53.3477388,
-          lng: -6.2662613,
+          lat: 53.3495105,
+          lng: -6.2669459,
         },
         {
           name: "Parliament Street",
           lat: 53.3445312,
           lng: -6.2673698,
+        },
+        {
+          name: "Pearse Street",
+          lat: 53.344473,
+          lng: -6.2511176,
+        },
+        {
+          name: "Dorset Street",
+          lat: 53.3535615,
+          lng: -6.26836,
+        },
+        {
+          name: "Baggot Street",
+          lat: 53.3326025,
+          lng: -6.243701,
+        },
+        {
+          name: "Merrion Square",
+          lat: 53.339152,
+          lng: -6.2503308,
+        },
+        {
+          name: "St Stephen's Green",
+          lat: 53.3380517,
+          lng: -6.2590232,
+        },
+        {
+          name: "Thomas Street",
+          lat: 53.3433655,
+          lng: -6.2830178,
+        },
+        {
+          name: "James's Street",
+          lat: 53.3431108,
+          lng: -6.2908996,
+        },
+        {
+          name: "North Circular Road",
+          lat: 53.3600583,
+          lng: -6.263208,
         },
       ],
     },
@@ -105,14 +125,19 @@ const CONFIG = {
       },
       roads: [
         {
-          name: "Patrick Street",
-          lat: 52.137841,
-          lng: -8.273775,
+          name: "St Patrick's Street",
+          lat: 51.8983321,
+          lng: -8.472843,
         },
         {
           name: "Grand Parade",
           lat: 51.8965952,
           lng: -8.4746255,
+        },
+        {
+          name: "South Mall",
+          lat: 51.8962452,
+          lng: -8.4735832,
         },
         {
           name: "Oliver Plunkett Street",
@@ -121,13 +146,18 @@ const CONFIG = {
         },
         {
           name: "Washington Street",
-          lat: 51.8973526,
-          lng: -8.4808903,
+          lat: 51.897546,
+          lng: -8.4792473,
         },
         {
-          name: "South Mall",
-          lat: 51.8962452,
-          lng: -8.4735832,
+          name: "Patrick's Quay",
+          lat: 51.9003253,
+          lng: -8.46299,
+        },
+        {
+          name: "Anderson's Quay",
+          lat: 51.8997441,
+          lng: -8.4654267,
         },
         {
           name: "MacCurtain Street",
@@ -135,24 +165,64 @@ const CONFIG = {
           lng: -8.468289,
         },
         {
-          name: "Model Farm Road",
-          lat: 51.8915565,
-          lng: -8.5678511,
+          name: "North Main Street",
+          lat: 51.8991007,
+          lng: -8.4778687,
+        },
+        {
+          name: "South Main Street",
+          lat: 51.8958344,
+          lng: -8.4762772,
         },
         {
           name: "Western Road",
-          lat: 51.8963622,
-          lng: -8.4850313,
+          lat: 51.894201,
+          lng: -8.4971505,
         },
         {
-          name: "N8 (Kinsale Road)",
-          lat: 51.8792963,
-          lng: -8.4690504,
+          name: "Sheares Street",
+          lat: 51.8981759,
+          lng: -8.4798997,
         },
         {
-          name: "North Ring Road",
-          lat: 51.9159377,
-          lng: -8.4294554,
+          name: "Lower Glanmire Road",
+          lat: 51.9054278,
+          lng: -8.4070232,
+        },
+        {
+          name: "Douglas Road",
+          lat: 51.8799283,
+          lng: -8.4401663,
+        },
+        {
+          name: "Blackrock Road",
+          lat: 51.8970788,
+          lng: -8.4162038,
+        },
+        {
+          name: "Model Farm Road",
+          lat: 51.8885654,
+          lng: -8.5120059,
+        },
+        {
+          name: "Bishopstown Road",
+          lat: 51.8750631,
+          lng: -8.5236275,
+        },
+        {
+          name: "Wilton Road",
+          lat: 51.8886193,
+          lng: -8.5066859,
+        },
+        {
+          name: "Carrigrohane Road",
+          lat: 51.8933845,
+          lng: -8.5113153,
+        },
+        {
+          name: "Tivoli Road",
+          lat: 51.9157267,
+          lng: -8.4267312,
         },
       ],
     },
@@ -181,39 +251,89 @@ const CONFIG = {
           lng: -9.0541484,
         },
         {
-          name: "Salthill Road",
-          lat: 53.2682304,
-          lng: -9.0660935,
+          name: "Forster Street",
+          lat: 53.2753644,
+          lng: -9.0443073,
         },
         {
-          name: "Seamus Quirke Road",
-          lat: 53.2747846,
-          lng: -9.0780474,
-        },
-        {
-          name: "Headford Road",
-          lat: 53.2842553,
-          lng: -9.0467527,
-        },
-        {
-          name: "Tuam Road",
-          lat: 53.2860913,
-          lng: -9.0321624,
-        },
-        {
-          name: "Dublin Road",
-          lat: 53.2748356,
-          lng: -8.9883358,
+          name: "Eglinton Street",
+          lat: 53.274442,
+          lng: -9.0521013,
         },
         {
           name: "University Road",
-          lat: 53.2755893,
-          lng: -9.0559665,
+          lat: 53.2759778,
+          lng: -9.0594264,
         },
         {
           name: "Newcastle Road",
           lat: 53.2734339,
           lng: -9.0626023,
+        },
+        {
+          name: "Headford Road",
+          lat: 53.2825559,
+          lng: -9.0475886,
+        },
+        {
+          name: "Tuam Road",
+          lat: 53.287639,
+          lng: -9.0272775,
+        },
+        {
+          name: "Dublin Road",
+          lat: 53.2764659,
+          lng: -9.0047147,
+        },
+        {
+          name: "Seamus Quirke Road",
+          lat: 53.2750111,
+          lng: -9.077236,
+        },
+        {
+          name: "Bohermore",
+          lat: 53.2787266,
+          lng: -9.0449172,
+        },
+        {
+          name: "Wellpark Road",
+          lat: 53.282532,
+          lng: -9.0332125,
+        },
+        {
+          name: "Lough Atalia Road",
+          lat: 53.2729697,
+          lng: -9.043575,
+        },
+        {
+          name: "Dock Road",
+          lat: 53.2707321,
+          lng: -9.0508911,
+        },
+        {
+          name: "Fr Griffin Road",
+          lat: 53.2685738,
+          lng: -9.0581751,
+        },
+        {
+          name: "Upper Salthill Road",
+          lat: 53.2628238,
+          lng: -9.0726056,
+        },
+        {
+          name: "Lower Salthill Road",
+          lat: 53.267217,
+          lng: -9.0681442,
+        },
+        {
+          name: "The Promenade",
+          lat: 53.2608756,
+          lng: -9.0721628,
+        },
+        {
+          name: "Bóthar na dTreabh",
+          lat: 53.2823097,
+          lng: -9.0491849,
         },
       ],
     },
@@ -228,18 +348,8 @@ const CONFIG = {
       roads: [
         {
           name: "O'Connell Street",
-          lat: 52.6620968,
-          lng: -8.6285423,
-        },
-        {
-          name: "Henry Street",
-          lat: 52.6592854,
-          lng: -8.6333626,
-        },
-        {
-          name: "Patrick Street",
-          lat: 52.6650432,
-          lng: -8.6252641,
+          lat: 52.6624879,
+          lng: -8.6281364,
         },
         {
           name: "William Street",
@@ -247,34 +357,94 @@ const CONFIG = {
           lng: -8.6247461,
         },
         {
+          name: "Patrick Street",
+          lat: 52.6650432,
+          lng: -8.6252641,
+        },
+        {
+          name: "Henry Street",
+          lat: 52.6595324,
+          lng: -8.6331845,
+        },
+        {
+          name: "Cecil Street",
+          lat: 52.6612553,
+          lng: -8.6274949,
+        },
+        {
+          name: "Shannon Street",
+          lat: 52.6626878,
+          lng: -8.6289253,
+        },
+        {
+          name: "Thomas Street",
+          lat: 52.6626688,
+          lng: -8.625923,
+        },
+        {
+          name: "Mulgrave Street",
+          lat: 52.6596108,
+          lng: -8.616968,
+        },
+        {
+          name: "Roxboro Road",
+          lat: 52.6563888,
+          lng: -8.6180489,
+        },
+        {
           name: "Dublin Road",
-          lat: 52.6637059,
-          lng: -8.5971254,
+          lat: 52.6636786,
+          lng: -8.5969311,
         },
         {
           name: "Ennis Road",
-          lat: 52.6692112,
-          lng: -8.6549146,
+          lat: 52.6729139,
+          lng: -8.6691575,
         },
         {
           name: "Dock Road",
-          lat: 52.6604975,
-          lng: -8.6345878,
+          lat: 52.646592,
+          lng: -8.6693603,
+        },
+        {
+          name: "Childers Road",
+          lat: 52.6481385,
+          lng: -8.6322412,
         },
         {
           name: "Ballinacurra Road",
-          lat: 52.6454802,
-          lng: -8.6435867,
+          lat: 52.6439396,
+          lng: -8.6460509,
         },
         {
-          name: "Ballysimon Road",
-          lat: 52.6507797,
-          lng: -8.5888316,
+          name: "South Circular Road",
+          lat: 52.6524575,
+          lng: -8.6390632,
         },
         {
-          name: "Shannon Bridge",
-          lat: 52.6624331,
-          lng: -8.6353991,
+          name: "Clare Street",
+          lat: 52.6655905,
+          lng: -8.6125188,
+        },
+        {
+          name: "Parnell Street",
+          lat: 52.6597442,
+          lng: -8.6250059,
+        },
+        {
+          name: "Barrington Street",
+          lat: 52.6583164,
+          lng: -8.6313605,
+        },
+        {
+          name: "Newenham Street",
+          lat: 52.6587455,
+          lng: -8.6330813,
+        },
+        {
+          name: "Catherine Street",
+          lat: 52.661149,
+          lng: -8.627609,
         },
       ],
     },
@@ -289,33 +459,18 @@ const CONFIG = {
       roads: [
         {
           name: "The Quay",
-          lat: 52.2393689,
-          lng: -6.9725063,
+          lat: 52.2393483,
+          lng: -6.9724471,
         },
         {
-          name: "Merchants Quay",
-          lat: 52.2636951,
-          lng: -7.1178996,
+          name: "Merchant's Quay",
+          lat: 52.2637538,
+          lng: -7.1181641,
         },
         {
-          name: "Cork Road (N25)",
-          lat: 52.2452381,
-          lng: -7.1315037,
-        },
-        {
-          name: "Tramore Road (R675)",
-          lat: 52.2330234,
-          lng: -7.1215556,
-        },
-        {
-          name: "Dunmore Road",
-          lat: 52.2568942,
-          lng: -7.1024133,
-        },
-        {
-          name: "Farronshoneen Roundabout",
-          lat: 52.2411244,
-          lng: -7.0898485,
+          name: "Parade Quay",
+          lat: 52.260621,
+          lng: -7.1053366,
         },
         {
           name: "O'Connell Street",
@@ -323,19 +478,84 @@ const CONFIG = {
           lng: -7.1137506,
         },
         {
-          name: "Parnell Street",
-          lat: 52.2581449,
-          lng: -7.1098037,
+          name: "Patrick Street",
+          lat: 52.2600379,
+          lng: -7.1122554,
         },
         {
-          name: "Johnstown",
-          lat: 52.2137642,
-          lng: -7.2713749,
+          name: "John Street",
+          lat: 52.2576216,
+          lng: -7.1116742,
         },
         {
-          name: "Gracedieu Road",
-          lat: 52.2622996,
-          lng: -7.1246596,
+          name: "Michael Street",
+          lat: 52.2588546,
+          lng: -7.1118775,
+        },
+        {
+          name: "Barronstrand Street",
+          lat: 52.2616392,
+          lng: -7.1116086,
+        },
+        {
+          name: "High Street",
+          lat: 52.2607268,
+          lng: -7.1098613,
+        },
+        {
+          name: "Catherine Street",
+          lat: 52.2576502,
+          lng: -7.1072702,
+        },
+        {
+          name: "Bridge Street",
+          lat: 52.2633838,
+          lng: -7.1193588,
+        },
+        {
+          name: "The Mall",
+          lat: 52.2598087,
+          lng: -7.1060535,
+        },
+        {
+          name: "Dunmore Road",
+          lat: 52.2469433,
+          lng: -7.0799638,
+        },
+        {
+          name: "Cork Road",
+          lat: 52.2450579,
+          lng: -7.1355153,
+        },
+        {
+          name: "Dublin Road",
+          lat: 52.1546054,
+          lng: -8.2781502,
+        },
+        {
+          name: "Tramore Road",
+          lat: 52.2471469,
+          lng: -7.1189771,
+        },
+        {
+          name: "Ballybricken",
+          lat: 52.2603785,
+          lng: -7.1205244,
+        },
+        {
+          name: "Manor Street",
+          lat: 52.2543912,
+          lng: -7.1142211,
+        },
+        {
+          name: "New Street",
+          lat: 52.2583185,
+          lng: -7.1125192,
+        },
+        {
+          name: "Poleberry",
+          lat: 52.2517856,
+          lng: -7.110356,
         },
       ],
     },
@@ -859,7 +1079,7 @@ class TomTomAPI {
 
   // #fetchFlowForPoint: private method
   static async #fetchFlowForPoint(lat, lng, roadName) {
-    const url = `${this.BASE_URL}/4/flowSegmentData/absolute/10/json?point=${lat},${lng}&unit=KMPH&key=${this.API_KEY}`;
+    const url = `${this.BASE_URL}/4/flowSegmentData/absolute/22/json?point=${lat},${lng}&unit=KMPH&key=${this.API_KEY}`;
     try {
       const response = await fetch(url);
       if (!response.ok) {
