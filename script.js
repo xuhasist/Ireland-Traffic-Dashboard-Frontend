@@ -332,8 +332,8 @@ const CONFIG = {
         },
         {
           name: "Bóthar na dTreabh",
-          lat: 53.2823097,
-          lng: -9.0491849,
+          lat: 53.2889785,
+          lng: -9.0103081,
         },
       ],
     },
@@ -837,10 +837,14 @@ function updateAutoUpdateButton(isRunning) {
 }
 
 function showLoading() {
+  dom.container.classList.remove("loaded");
+  dom.weatherWidget.classList.remove("loaded");
   dom.loadingOverlay?.classList.add("active");
 }
 function hideLoading() {
   dom.loadingOverlay?.classList.remove("active");
+  dom.container.classList.add("loaded");
+  dom.weatherWidget.classList.add("loaded");
 }
 
 function formatTime(timeZone) {
@@ -1578,7 +1582,7 @@ function updateWeatherWidget() {
   dom.weatherWidget.querySelector(".weather-icon").textContent =
     OpenWeatherAPI.getWeatherIcon(icon);
 
-  dom.weatherWidget.classList.add("loaded");
+  //dom.weatherWidget.classList.add("loaded");
 }
 
 // ================================
@@ -2211,7 +2215,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initializeMap();
   initializeCharts();
   await initializeDashboard();
-  dom.container.classList.add("loaded");
+  //dom.container.classList.add("loaded");
   startAutoUpdate();
   hideLoading();
 });
