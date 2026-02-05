@@ -1,4 +1,5 @@
 import ReactDOM from "react-dom/client";
+import React from "react";
 import App from "./App";
 
 // 1) Your original CSS (moved from /style.css)

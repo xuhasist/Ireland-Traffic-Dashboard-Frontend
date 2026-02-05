@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react"; // React hook
 import {
   bootstrapTrafficDashboard,
   type DashboardHandle,
-} from "./legacy/dashboard";
+} from "./legacy/index.js";
 
 /**
  * Day 1 goal:
@@ -49,25 +49,6 @@ export default function App() {
 
   return (
     <>
-      {import.meta.env.DEV /* development environment only for debugging*/ && (
-        <div
-          style={{
-            position: "fixed",
-            right: 12,
-            bottom: 12,
-            zIndex: 99999,
-            background: "rgba(0,0,0,0.75)",
-            color: "white",
-            padding: "6px 10px",
-            borderRadius: 999,
-            fontSize: 12,
-            fontFamily: "ui-sans-serif, system-ui, -apple-system",
-          }}
-        >
-          React mounted ✅
-        </div>
-      )}
-
       <div className="loading-overlay">
         <div className="spinner"></div>
         <p>Loading traffic data...</p>
