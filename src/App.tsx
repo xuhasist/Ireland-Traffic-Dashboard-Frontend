@@ -1,13 +1,9 @@
 // src/App.tsx 回傳 JSX 元素插進 #root, 就是 React 產生的 UI(DOM) 結構
-import { useEffect } from "react"; // React hook
-import { bootstrapTrafficDashboard } from "./legacy/dashboard";
-
-// Extend the Window type so TypeScript knows about window.centerMap
-declare global {
-  interface Window {
-    centerMap?: () => void; // 讓 React 可以呼叫到 legacy 的 centerMap function
-  }
-}
+import { useEffect, useRef } from "react"; // React hook
+import {
+  bootstrapTrafficDashboard,
+  type DashboardHandle,
+} from "./legacy/dashboard";
 
 /**
  * Day 1 goal:
@@ -18,18 +14,37 @@ declare global {
  * you make it work first, then refactor feature-by-feature into React state.
  */
 export default function App() {
+  // use Ref to hold the dashboard handle across renders (permanent storage)
+  // don't use state, because we don't need to re-render when it changes
+  const dashRef = useRef<DashboardHandle | null>(null); // initialize with null
+
+  // 元件第一次 render 完後跑一次, 之後不會因為 state 改變重跑
   useEffect(() => {
+    let alive = true;
+
     // Run after the first render so all #id and .class elements exist.
-    // If anything fails, check the browser console for errors.
-    // IMPORTANT: During migration, legacy code can throw and stop the rest
-    // of the initialization.
-    // We catch it so React still renders the UI skeleton (no blank page).
-    bootstrapTrafficDashboard().catch((err) => {
-      // eslint-disable-next-line no-console
-      console.error("bootstrapTrafficDashboard failed:", err);
-      // Make sure the container is visible even if the legacy bootstrap fails.
-      //document.querySelector(".container")?.classList.add("loaded");
-    });
+    // ① effect：做事（訂閱、請求、操作 DOM、啟動東西）
+    bootstrapTrafficDashboard()
+      .then((handle) => {
+        // handle is { centerMap, destroy }
+        if (!alive) {
+          handle.destroy();
+          return;
+        }
+        dashRef.current = handle;
+      })
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error("bootstrapTrafficDashboard failed:", err);
+      });
+
+    // ② cleanup：善後（取消、關閉、清理）
+    // unmount 時或 effect 重跑前執行
+    return () => {
+      alive = false;
+      dashRef.current?.destroy();
+      dashRef.current = null;
+    };
   }, []);
 
   return (
@@ -210,7 +225,7 @@ export default function App() {
               <button
                 className="map-btn"
                 id="centerMapBtn"
-                onClick={() => window.centerMap?.()}
+                onClick={() => dashRef.current?.centerMap()}
                 title="Center"
               >
                 <span>📍</span>

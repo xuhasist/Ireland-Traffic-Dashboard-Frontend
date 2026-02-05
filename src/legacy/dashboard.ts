@@ -23,6 +23,43 @@
 import L from "leaflet";
 import Chart from "chart.js/auto";
 
+// 只是「型別說明書」，不是東西本身。它不會幫你產生任何實際的值。
+export type DashboardHandle = {
+  centerMap: () => void;
+  destroy: () => void;
+};
+
+// Track listeners so we can cleanly unmount (important for HMR / React remounts)
+const __listeners: Array<{
+  el: EventTarget;
+  type: string;
+  fn: EventListenerOrEventListenerObject;
+  options?: boolean | AddEventListenerOptions;
+}> = [];
+
+function on(
+  el: EventTarget | null | undefined,
+  type: string,
+  fn: EventListenerOrEventListenerObject,
+  options?: boolean | AddEventListenerOptions,
+) {
+  if (!el) return;
+  el.addEventListener(type, fn, options);
+  __listeners.push({ el, type, fn, options });
+}
+
+function removeAllListeners() {
+  for (const l of __listeners.splice(0)) {
+    try {
+      l.el.removeEventListener(l.type, l.fn, l.options);
+    } catch {
+      // ignore
+    }
+  }
+}
+
+let __handle: DashboardHandle | null = null;
+
 // Small helper type for Leaflet coordinates
 type LatLng = { lat: number; lng: number };
 
@@ -2114,37 +2151,43 @@ function toggleAutoUpdate() {
 // EVENTS
 // ================================
 function setupEventListeners() {
-  dom.refreshBtn?.addEventListener("click", async () => {
+  const refreshHandler = async () => {
     showLoading();
     centerMap();
     await initializeDashboard();
     hideLoading();
-  });
+  };
+
+  // on 用在 EventListener + 集中管理
+  on(dom.refreshBtn, "click", refreshHandler);
 
   // City selector
-  // select set selected option to value
-  dom.cityDropdown?.addEventListener("change", async () => {
+  const cityChangeHandler = async () => {
     showLoading();
-    setCity(dom.cityDropdown.value);
+    setCity((dom.cityDropdown as any).value);
     initializeMap();
     await initializeDashboard();
     hideLoading();
-  });
+  };
+  on(dom.cityDropdown, "change", cityChangeHandler);
+
   // Live API / Mock switch
-  dom.dataModeToggle?.addEventListener("change", async () => {
+  const dataModeHandler = async () => {
     showLoading();
     setDataMode(dom.dataModeToggle.checked ? "live" : "mock");
     await initializeDashboard();
     hideLoading();
-  });
+  };
+  on(dom.dataModeToggle, "change", dataModeHandler);
 
   // Auto-update
-  dom.autoUpdateBtn?.addEventListener("click", () => {
+  const autoUpdateHandler = () => {
     toggleAutoUpdate();
-  });
+  };
+  on(dom.autoUpdateBtn, "click", autoUpdateHandler);
 
   // Traffic sort
-  dom.filterBtn?.addEventListener("click", () => {
+  const trafficSortHandler = () => {
     state.traffic.page = 1;
     const sortBy = dom.sortDropdown.value;
     const applyFilter = sortBy === state.sort;
@@ -2153,34 +2196,41 @@ function setupEventListeners() {
     renderTrafficLists(applyFilter);
 
     state.sort = sortBy;
-  });
+  };
+  on(dom.filterBtn, "click", trafficSortHandler);
 
   // Incident filters
-  dom.incidentTypeFilter?.addEventListener("change", () => {
-    state.incidents.filters.type = dom.incidentTypeFilter.value;
+  const incidentTypeHandler = () => {
+    state.incidents.filters.type = (dom.incidentTypeFilter as any).value;
     state.incidents.page = 1;
     renderIncidentsLists();
-    updateMetricsCards(); // only show filtered count
-  });
-  dom.incidentRoadSearch?.addEventListener("input", () => {
-    state.incidents.filters.roadQuery = dom.incidentRoadSearch.value;
+    updateMetricsCards();
+  };
+  on(dom.incidentTypeFilter, "change", incidentTypeHandler);
+
+  const incidentRoadHandler = () => {
+    state.incidents.filters.roadQuery = (dom.incidentRoadSearch as any).value;
     state.incidents.page = 1;
     renderIncidentsLists();
-    updateMetricsCards(); // only show filtered count
-  });
+    updateMetricsCards();
+  };
+  on(dom.incidentRoadSearch, "input", incidentRoadHandler);
 
   setupTrafficPagination();
   setupIncidentPagination();
 }
 
 function setupTrafficPagination() {
-  dom.trafficPagination.prevBtn.addEventListener("click", () => {
+  const prev = dom.trafficPagination.prevBtn;
+  const next = dom.trafficPagination.nextBtn;
+
+  const prevHandler = () => {
     if (state.traffic.page > 1) {
       state.traffic.page--;
       renderTrafficLists();
     }
-  });
-  dom.trafficPagination.nextBtn.addEventListener("click", () => {
+  };
+  const nextHandler = () => {
     const totalPages = Math.ceil(
       state.traffic.data.length / CONFIG.pagination.trafficItemsPerPage,
     );
@@ -2188,18 +2238,24 @@ function setupTrafficPagination() {
       state.traffic.page++;
       renderTrafficLists();
     }
-  });
+  };
+
+  on(prev, "click", prevHandler);
+  on(next, "click", nextHandler);
 }
 
 function setupIncidentPagination() {
-  dom.incidentPagination.prevBtn.addEventListener("click", () => {
+  const prev = dom.incidentPagination.prevBtn;
+  const next = dom.incidentPagination.nextBtn;
+
+  const prevHandler = () => {
     if (state.incidents.page > 1) {
       state.incidents.page--;
       renderIncidentsLists();
     }
-  });
+  };
 
-  dom.incidentPagination.nextBtn.addEventListener("click", () => {
+  const nextHandler = () => {
     const totalPages = Math.ceil(
       getFilteredIncidents().length / CONFIG.pagination.incidentItemsPerPage,
     );
@@ -2207,9 +2263,11 @@ function setupIncidentPagination() {
       state.incidents.page++;
       renderIncidentsLists();
     }
-  });
-}
+  };
 
+  on(prev, "click", prevHandler);
+  on(next, "click", nextHandler);
+}
 // ================================
 // BOOTSTRAP
 // ================================
@@ -2241,17 +2299,11 @@ let __bootstrapped = false;
  * Bootstraps the dashboard AFTER React has rendered the HTML.
  * We guard it so hot-reload / double-calls won't register events twice.
  */
-export async function bootstrapTrafficDashboard(): Promise<void> {
-  if (__bootstrapped) return;
+export async function bootstrapTrafficDashboard(): Promise<DashboardHandle> {
+  if (__bootstrapped && __handle) return __handle;
   // If we crash during bootstrap, we reset this back to false so you can
   // hot-reload and retry without refreshing the whole page.
   __bootstrapped = true;
-
-  // Expose centerMap() to window so the React button can call it.
-  // (Your original HTML used onclick="centerMap()")
-  // We'll assign the real function later after it's declared.
-  // For now it's a no-op to avoid undefined access.
-  (window as any).centerMap = () => {};
 
   // HTML 已經被解析完成，DOM Tree 已經建好
   // 所有 HTML tags 都變成 DOM nodes
@@ -2291,9 +2343,36 @@ export async function bootstrapTrafficDashboard(): Promise<void> {
     startAutoUpdate();
     hideLoading();
 
-    // Now that initializeMap() ran, centerMap() exists.
-    // Re-bind window.centerMap to the real implementation.
-    (window as any).centerMap = centerMap;
+    const destroy = () => {
+      // Stop periodic updates
+      try {
+        stopAutoUpdate();
+      } catch {}
+      // Remove all DOM listeners we registered
+      try {
+        removeAllListeners();
+      } catch {}
+      // Destroy charts
+      try {
+        state.charts?.speedTrend?.destroy?.();
+      } catch {}
+      try {
+        state.charts?.congestion?.destroy?.();
+      } catch {}
+      state.charts.speedTrend = null;
+      state.charts.congestion = null;
+      // Destroy map
+      try {
+        state.map?.remove?.();
+      } catch {}
+      state.map = null;
+      // Reset handle so a remount can bootstrap again
+      __handle = null;
+      __bootstrapped = false;
+    };
+
+    __handle = { centerMap, destroy };
+    return __handle;
   } catch (err) {
     // If anything throws, keep the page usable and visible.
     console.error("Legacy dashboard bootstrap failed:", err);
