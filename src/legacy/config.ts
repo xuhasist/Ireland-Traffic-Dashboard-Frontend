@@ -1,3 +1,5 @@
+import type { DashboardConfig } from "./types";
+
 // ================================
 // CONFIG & DATA
 // ================================
@@ -578,4 +580,4 @@ export const CONFIG = {
     speedTrendMaxPoints: 10, // 折線圖最多顯示點數
     speedTrendYMax: 60, // 折線圖 Y 軸最大值
   },
-};
+} as DashboardConfig;

@@ -1,100 +1,187 @@
 // ================================
 // DOM(Document Object Model) CACHE
 // ================================
-export const dom: any = {
-  loadingOverlay: null,
-  container: null,
-  // navbar
-  navbarTitle: null,
-  cityDropdown: null,
-  dataModeLabel: null,
-  dataModeToggle: null,
-  refreshBtn: null,
-  autoUpdateBtn: null,
-  // weather
-  weatherWidget: null,
-  // map
-  mapEl: null,
-  centerMapBtn: null,
-  // metrics
-  metricCards: null,
-  // charts
-  speedTrendCanvas: null,
-  congestionCanvas: null,
-  // traffic
-  sortDropdown: null,
-  filterBtn: null,
-  trafficItemsContainer: null,
-  trafficPagination: {
-    prevBtn: null,
-    nextBtn: null,
-    currentPage: null,
-    totalPages: null,
-  },
-  // incidents
-  incidentTypeFilter: null,
-  incidentRoadSearch: null,
-  incidentCountBadge: null,
-  incidentItemsContainer: null,
-  incidentPagination: {
-    prevBtn: null,
-    nextBtn: null,
-    currentPage: null,
-    totalPages: null,
-  },
+
+type PaginationDom = {
+  prevBtn: HTMLButtonElement;
+  nextBtn: HTMLButtonElement;
+  currentPage: HTMLSpanElement;
+  totalPages: HTMLSpanElement;
 };
 
+export type DomCache = {
+  loadingOverlay: HTMLDivElement;
+  container: HTMLDivElement;
+  // navbar
+  navbarTitle: HTMLHeadingElement;
+  cityDropdown: HTMLSelectElement;
+  dataModeLabel: HTMLSpanElement;
+  dataModeToggle: HTMLInputElement;
+  refreshBtn: HTMLButtonElement;
+  autoUpdateBtn: HTMLButtonElement;
+  autoUpdateBtnIcon: HTMLSpanElement;
+  autoUpdateBtnText: HTMLSpanElement;
+  // weather
+  weatherWidget: HTMLDivElement;
+  weatherWidgetTemp: HTMLDivElement;
+  weatherWidgetTime: HTMLDivElement;
+  weatherWidgetIcon: HTMLDivElement;
+  weatherWidgetDescription: HTMLDivElement;
+  // map
+  mapEl: HTMLDivElement;
+  centerMapBtn: HTMLButtonElement;
+  // metrics
+  metricCards: NodeListOf<HTMLDivElement>;
+  healthCard: HTMLDivElement;
+  healthCardBar: HTMLSpanElement;
+  // charts
+  speedTrendCanvas: HTMLCanvasElement;
+  congestionCanvas: HTMLCanvasElement;
+  // traffic
+  sortDropdown: HTMLSelectElement;
+  filterBtn: HTMLButtonElement;
+  trafficItemsContainer: HTMLDivElement;
+  trafficPagination: PaginationDom;
+  // incidents
+  incidentTypeFilter: HTMLSelectElement;
+  incidentRoadSearch: HTMLInputElement;
+  incidentCountBadge: HTMLSpanElement;
+  incidentItemsContainer: HTMLDivElement;
+  incidentPagination: PaginationDom;
+};
+
+function requiredById<T extends HTMLElement>(
+  id: string,
+  ctor: { new (...args: never[]): T },
+): T {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`Missing required element #${id}`);
+  if (!(el instanceof ctor))
+    throw new Error(`Element #${id} is not a ${ctor.name}`);
+  return el;
+}
+
+function requiredQuery<T extends HTMLElement>(
+  selector: string,
+  ctor: { new (...args: never[]): T },
+): T {
+  const el = document.querySelector(selector);
+  if (!el) throw new Error(`Missing required element ${selector}`);
+  if (!(el instanceof ctor))
+    throw new Error(`Element ${selector} is not a ${ctor.name}`);
+  return el;
+}
+
+function requiredChild<T extends Element>(
+  parent: ParentNode,
+  selector: string,
+  ctor: { new (...args: never[]): T },
+): T {
+  const el = parent.querySelector(selector);
+  if (!el) throw new Error(`Missing required child '${selector}'`);
+  if (!(el instanceof ctor))
+    throw new Error(`Child '${selector}' is not a ${ctor.name}`);
+  return el;
+}
+
+// TS 會把 dom 的型別推斷成 DomCache
+export const dom = {} as DomCache;
+
 export function cacheDom() {
-  dom.loadingOverlay = document.querySelector(".loading-overlay");
-  dom.container = document.querySelector(".container");
+  dom.loadingOverlay = requiredQuery(".loading-overlay", HTMLDivElement);
+  dom.container = requiredQuery(".container", HTMLDivElement);
 
   // navbar
-  dom.navbarTitle = document.querySelector(".navbar h1");
-  dom.cityDropdown = document.getElementById("cityDropdown");
-  dom.dataModeLabel = document.getElementById("dataModeLabel");
-  dom.dataModeToggle = document.getElementById("dataModeToggle");
-  dom.refreshBtn = document.querySelector(".nav-buttons .btn");
-  dom.autoUpdateBtn = document.querySelector(".btn-primary");
+  dom.navbarTitle = requiredQuery(".navbar h1", HTMLHeadingElement);
+  dom.cityDropdown = requiredById("cityDropdown", HTMLSelectElement);
+  dom.dataModeLabel = requiredById("dataModeLabel", HTMLSpanElement);
+  dom.dataModeToggle = requiredById("dataModeToggle", HTMLInputElement);
+  dom.refreshBtn = requiredQuery(".nav-buttons .btn", HTMLButtonElement);
+  dom.autoUpdateBtn = requiredQuery(".btn-primary", HTMLButtonElement);
+  dom.autoUpdateBtnIcon = requiredChild(
+    dom.autoUpdateBtn,
+    ".icon",
+    HTMLSpanElement,
+  )!;
+  dom.autoUpdateBtnText = requiredChild(
+    dom.autoUpdateBtn,
+    ".text",
+    HTMLSpanElement,
+  )!;
 
   // weather
-  dom.weatherWidget = document.getElementById("weatherWidget");
+  dom.weatherWidget = requiredById("weatherWidget", HTMLDivElement);
+  dom.weatherWidgetTemp = requiredChild(
+    dom.weatherWidget,
+    ".weather-temp",
+    HTMLDivElement,
+  )!;
+  dom.weatherWidgetTime = requiredChild(
+    dom.weatherWidget,
+    ".weather-time",
+    HTMLDivElement,
+  )!;
+  dom.weatherWidgetIcon = requiredChild(
+    dom.weatherWidget,
+    ".weather-icon",
+    HTMLDivElement,
+  )!;
+  dom.weatherWidgetDescription = requiredChild(
+    dom.weatherWidget,
+    ".weather-desc",
+    HTMLDivElement,
+  )!;
 
   // map
-  dom.mapEl = document.getElementById("map");
-  dom.centerMapBtn = document.getElementById("centerMapBtn");
+  dom.mapEl = requiredById("map", HTMLDivElement);
+  dom.centerMapBtn = requiredById("centerMapBtn", HTMLButtonElement);
 
   // charts
-  dom.speedTrendCanvas = document.getElementById("speedTrendChart");
-  dom.congestionCanvas = document.getElementById("congestionChart");
+  dom.speedTrendCanvas = requiredById("speedTrendChart", HTMLCanvasElement);
+  dom.congestionCanvas = requiredById("congestionChart", HTMLCanvasElement);
 
   // metrics
-  dom.metricCards = document.querySelectorAll(".metric-top");
+  dom.metricCards = document.querySelectorAll<HTMLDivElement>(".metric-top");
+  dom.healthCard = requiredQuery(
+    '.metric-top[data-metric="healthScore"]',
+    HTMLDivElement,
+  );
+  dom.healthCardBar = requiredChild(
+    dom.healthCard,
+    ".metric-progress > span",
+    HTMLSpanElement,
+  );
 
   // traffic
-  dom.sortDropdown = document.getElementById("sort-dropdown");
-  dom.filterBtn = document.querySelector(".filter-btn");
-  dom.trafficItemsContainer = document.querySelector(
+  dom.sortDropdown = requiredById("sort-dropdown", HTMLSelectElement);
+  dom.filterBtn = requiredQuery(".filter-btn", HTMLButtonElement);
+  dom.trafficItemsContainer = requiredQuery(
     ".traffic-items-container",
+    HTMLDivElement,
   );
-  dom.trafficPagination.prevBtn = document.getElementById("trafficPrevPage");
-  dom.trafficPagination.nextBtn = document.getElementById("trafficNextPage");
-  dom.trafficPagination.currentPage =
-    document.getElementById("trafficCurrentPage");
-  dom.trafficPagination.totalPages =
-    document.getElementById("trafficTotalPages");
+  dom.trafficPagination = {
+    prevBtn: requiredById("trafficPrevPage", HTMLButtonElement),
+    nextBtn: requiredById("trafficNextPage", HTMLButtonElement),
+    currentPage: requiredById("trafficCurrentPage", HTMLSpanElement),
+    totalPages: requiredById("trafficTotalPages", HTMLSpanElement),
+  };
 
   // incidents
-  dom.incidentTypeFilter = document.getElementById("incidentTypeFilter");
-  dom.incidentRoadSearch = document.getElementById("incidentRoadSearch");
-  dom.incidentCountBadge = document.getElementById("incidentCountBadge");
-  dom.incidentItemsContainer = document.querySelector(
+  dom.incidentTypeFilter = requiredById(
+    "incidentTypeFilter",
+    HTMLSelectElement,
+  );
+  dom.incidentRoadSearch = requiredById("incidentRoadSearch", HTMLInputElement);
+  dom.incidentCountBadge = requiredById("incidentCountBadge", HTMLSpanElement);
+  dom.incidentItemsContainer = requiredQuery(
     ".incident-items-container",
+    HTMLDivElement,
   );
-  dom.incidentPagination.prevBtn = document.getElementById("incidentPrevPage");
-  dom.incidentPagination.nextBtn = document.getElementById("incidentNextPage");
-  dom.incidentPagination.currentPage = document.getElementById(
-    "incidentCurrentPage",
-  );
-  dom.incidentPagination.totalPages =
-    document.getElementById("incidentTotalPages");
+  // incidents
+  dom.incidentPagination = {
+    prevBtn: requiredById("incidentPrevPage", HTMLButtonElement),
+    nextBtn: requiredById("incidentNextPage", HTMLButtonElement),
+    currentPage: requiredById("incidentCurrentPage", HTMLSpanElement),
+    totalPages: requiredById("incidentTotalPages", HTMLSpanElement),
+  };
 }

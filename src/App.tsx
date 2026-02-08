@@ -1,5 +1,5 @@
 // src/App.tsx 回傳 JSX 元素插進 #root, 就是 React 產生的 UI(DOM) 結構
-import { useEffect, useRef } from "react"; // React hook
+import { useEffect, useRef, useState } from "react"; // React hook
 import {
   bootstrapTrafficDashboard,
   type DashboardHandle,
@@ -17,14 +17,20 @@ export default function App() {
   // use Ref to hold the dashboard handle across renders (permanent storage)
   // don't use state, because we don't need to re-render when it changes
   const dashRef = useRef<DashboardHandle | null>(null); // initialize with null
+  const [progress, setProgress] = useState(0);
 
   // 元件第一次 render 完後跑一次, 之後不會因為 state 改變重跑
   useEffect(() => {
     let alive = true;
 
+    const onProgressChange = (v: number) => {
+      if (!alive) return;
+      setProgress(v);
+    };
+
     // Run after the first render so all #id and .class elements exist.
     // ① effect：做事（訂閱、請求、操作 DOM、啟動東西）
-    bootstrapTrafficDashboard()
+    bootstrapTrafficDashboard({ onProgressChange })
       .then((handle) => {
         // handle is { centerMap, destroy }
         if (!alive) {
@@ -190,7 +196,7 @@ export default function App() {
             <div className="metric-progress">
               <span
                 className="metric-progress-fill good"
-                style={{ width: "0%" }}
+                style={{ width: `${progress}%` }}
               ></span>
             </div>
             <div className="metric-sub">--</div>

@@ -1,10 +1,22 @@
-// @ts-nocheck
 import L from "leaflet";
 import Chart from "chart.js/auto";
 import { CONFIG } from "./config.js";
 import { state } from "./state.js";
 import { dom, cacheDom } from "./dom.js";
-import { DashboardHandle } from "./types.js";
+import {
+  BBox,
+  CityConfig,
+  DashboardHandle,
+  IncidentDetails,
+  IncidentListItem,
+  IncidentStandardFormat,
+  Road,
+  SortOption,
+  TrafficListItem,
+  TrafficStandardFormat,
+  TrafficStatus,
+  WeatherData,
+} from "./types.js";
 import { on, removeAllListeners } from "./listeners.js";
 
 let __handle: DashboardHandle | null = null;
@@ -12,14 +24,15 @@ let __handle: DashboardHandle | null = null;
 // ================================
 // UTILITIES
 // ================================
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n)); // limit n between min and max
+const clamp = (n: number, min: number, max: number): number =>
+  Math.max(min, Math.min(max, n)); // limit n between min and max
 
-function capitalizeFirst(s) {
+function capitalizeFirst(s: string): string {
   if (!s) return ""; // all falsy values: false, 0, "", null, undefined, NaN
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function minutesAgoToText(minutesAgo) {
+function minutesAgoToText(minutesAgo: number): string {
   // check minutesAgo is a number
   if (!Number.isFinite(minutesAgo) || minutesAgo < 0) return "--";
   if (minutesAgo < 60) return `${minutesAgo} mins ago`;
@@ -27,18 +40,16 @@ function minutesAgoToText(minutesAgo) {
   return `${hoursAgo} hour${hoursAgo > 1 ? "s" : ""} ago`;
 }
 
-function jamToStatus(jamFactor) {
+function jamToStatus(jamFactor: number): TrafficStatus {
   if (jamFactor < CONFIG.thresholds.goodMax) return "good";
   if (jamFactor < CONFIG.thresholds.moderateMax) return "moderate";
   return "heavy";
 }
 
-function updateAutoUpdateButton(isRunning) {
+function updateAutoUpdateButton(isRunning: boolean): void {
   if (!dom.autoUpdateBtn) return; // check button exists
-  dom.autoUpdateBtn.querySelector(".icon").textContent = isRunning
-    ? "⏸️"
-    : "▶️";
-  dom.autoUpdateBtn.querySelector(".text").textContent = isRunning
+  dom.autoUpdateBtnIcon.textContent = isRunning ? "⏸️" : "▶️";
+  dom.autoUpdateBtnText.textContent = isRunning
     ? "Stop Auto-Update"
     : "Start Auto-Update";
 }
@@ -54,7 +65,7 @@ function hideLoading() {
   dom.weatherWidget.classList.add("loaded");
 }
 
-function formatTime(timeZone) {
+function formatTime(timeZone: string): string {
   return new Date().toLocaleTimeString("en-GB", {
     timeZone: timeZone,
     hour: "2-digit",
@@ -62,7 +73,7 @@ function formatTime(timeZone) {
     hour12: false,
   });
 }
-function formatTimeWithSeconds(timeZone) {
+function formatTimeWithSeconds(timeZone: string): string {
   return new Date().toLocaleTimeString("en-GB", {
     timeZone: timeZone,
     hour: "2-digit",
@@ -75,12 +86,12 @@ function formatTimeWithSeconds(timeZone) {
 // ================================
 // CITY & DATA MODE HELPERS
 // ================================
-function getCityConfig() {
+function getCityConfig(): CityConfig {
   // if cityKey not found, return default city config
   return CONFIG.cities[state.cityKey] ?? CONFIG.cities[CONFIG.defaultCity];
 }
 
-function setCity(cityKey) {
+function setCity(cityKey: string) {
   if (!CONFIG.cities[cityKey]) return; // city not found
   state.cityKey = cityKey;
 
@@ -109,7 +120,7 @@ function setCity(cityKey) {
   centerMap();
 }
 
-function setDataMode(mode) {
+function setDataMode(mode: string): void {
   state.dataMode = mode === "live" ? "live" : "mock";
   localStorage.setItem("traffic_dashboard_dataMode", state.dataMode);
   if (dom.dataModeLabel) {
@@ -138,7 +149,7 @@ function syncUIFromState() {
 // ================================
 // MOCK DATA GENERATORS
 // ================================
-function generateMockTrafficFlow() {
+function generateMockTrafficFlow(): { results: TrafficStandardFormat[] } {
   // 整個function的回傳值
   return {
     // each roads become an object in results array
@@ -201,12 +212,25 @@ function generateMockTrafficFlow() {
   */
 }
 
-function generateMockIncidents() {
+function normalizeCriticality(
+  value: string | null | undefined,
+): IncidentDetails["criticality"] {
+  switch (value) {
+    case "minor":
+    case "major":
+    case "moderate":
+      return value;
+    default:
+      return "Unknown";
+  }
+}
+
+function generateMockIncidents(): { results: IncidentStandardFormat[] } {
   const incidentTypes = [
-    { type: "ACCIDENT", icon: "🚨", severity: "critical" },
-    { type: "ROADWORK", icon: "🚧", severity: "major" },
-    { type: "HEAVY_TRAFFIC", icon: "⚡", severity: "minor" },
-    { type: "ROAD_CLOSURE", icon: "🚫", severity: "major" },
+    { type: "ACCIDENT", icon: "🚨", criticality: "major" },
+    { type: "ROADWORK", icon: "🚧", criticality: "major" },
+    { type: "HEAVY_TRAFFIC", icon: "⚡", criticality: "minor" },
+    { type: "ROAD_CLOSURE", icon: "🚫", criticality: "major" },
   ];
 
   // 隨機生成 2-5 個事件
@@ -226,7 +250,7 @@ function generateMockIncidents() {
         incidentDetails: {
           id: `incident_${Date.now()}_${index}`,
           type: incident.type,
-          criticality: incident.severity,
+          criticality: normalizeCriticality(incident.criticality),
           description: `${incident.type.replace("_", " ")} on ${road.name}`,
           startTime: new Date(Date.now() - minutesAgo * 60000).toISOString(),
           endTime: new Date(Date.now() + 60 * 60000).toISOString(),
@@ -278,7 +302,9 @@ class TomTomAPI {
   static API_KEY = "PEooaTjLuccn1ZmqjT25dDIfEIoXaIRh";
   static BASE_URL = "https://api.tomtom.com/traffic/services";
 
-  static async fetchTrafficFlow(roads) {
+  static async fetchTrafficFlow(
+    roads: Road[],
+  ): Promise<{ results: (TrafficStandardFormat | null)[] }> {
     // Fetch each road segment in parallel. If a single request fails, we simply drop that segment.
     const tasks = roads.map((road) =>
       this.#fetchFlowForPoint(road.lat, road.lng, road.name),
@@ -289,7 +315,11 @@ class TomTomAPI {
   }
 
   // #fetchFlowForPoint: private method
-  static async #fetchFlowForPoint(lat, lng, roadName) {
+  static async #fetchFlowForPoint(
+    lat: number,
+    lng: number,
+    roadName: string,
+  ): Promise<TrafficStandardFormat | null> {
     const url = `${this.BASE_URL}/4/flowSegmentData/absolute/22/json?point=${lat},${lng}&unit=KMPH&key=${this.API_KEY}`;
     try {
       const response = await fetch(url);
@@ -307,7 +337,12 @@ class TomTomAPI {
     }
   }
 
-  static #convertToStandardFormat(tomtomData, lat, lng, roadName) {
+  static #convertToStandardFormat(
+    tomtomData: any,
+    lat: number,
+    lng: number,
+    roadName: string,
+  ): TrafficStandardFormat {
     const flow = tomtomData.flowSegmentData;
 
     const freeFlow = Number(flow.freeFlowSpeed) || 0; // if null or undefined, set to 0
@@ -348,7 +383,9 @@ class TomTomAPI {
     };
   }
 
-  static async fetchIncidents(bbox) {
+  static async fetchIncidents(
+    bbox: BBox,
+  ): Promise<{ results: IncidentStandardFormat[] } | null> {
     const fields =
       "{incidents{type,geometry{type,coordinates},properties{id,iconCategory,magnitudeOfDelay,events{description,code,iconCategory},startTime,endTime,from,to,length,delay,roadNumbers,timeValidity,probabilityOfOccurrence,numberOfReports,lastReportTime,tmc{countryCode,tableNumber,tableVersion,direction,points{location,offset}}}}}";
     const url =
@@ -371,9 +408,11 @@ class TomTomAPI {
     }
   }
 
-  static #convertIncidentsToStandardFormat(tomtomData) {
+  static #convertIncidentsToStandardFormat(tomtomData: any): {
+    results: IncidentStandardFormat[];
+  } {
     return {
-      results: tomtomData.incidents.map((incident) => {
+      results: tomtomData.incidents.map((incident: any) => {
         const iconCategory = incident.properties.iconCategory;
         return {
           incidentDetails: {
@@ -388,10 +427,12 @@ class TomTomAPI {
             shape: {
               links: [
                 {
-                  points: incident.geometry.coordinates.map((coord) => ({
-                    lat: coord[1],
-                    lng: coord[0],
-                  })),
+                  points: incident.geometry.coordinates.map(
+                    (coord: [number, number]) => ({
+                      lat: coord[1],
+                      lng: coord[0],
+                    }),
+                  ),
                 },
               ],
             },
@@ -408,8 +449,8 @@ class TomTomAPI {
     };
   }
 
-  static getIncidentIcon(iconCategory) {
-    const iconMap = {
+  static getIncidentIcon(iconCategory: number): string {
+    const iconMap: Record<number, string> = {
       0: "❓", // Unknown
       1: "💥", // Accident
       2: "🌫️", // Fog
@@ -428,8 +469,8 @@ class TomTomAPI {
     return iconMap[iconCategory] ?? "";
   }
 
-  static getIncidentType(iconCategory) {
-    const typeMap = {
+  static getIncidentType(iconCategory: number): string {
+    const typeMap: Record<number, string> = {
       0: "Unknown",
       1: "Accident",
       2: "Fog",
@@ -447,8 +488,8 @@ class TomTomAPI {
     return typeMap[iconCategory] ?? "Unknown";
   }
 
-  static getSeverityLevel(iconCategory) {
-    const typeMap = {
+  static getSeverityLevel(iconCategory: number): string {
+    const typeMap: Record<number, string> = {
       0: "Unknown",
       1: "major",
       2: "moderate",
@@ -471,7 +512,10 @@ class OpenWeatherAPI {
   static API_KEY = "1970cf6f514f532c6eae6d654ed3d853";
   static BASE_URL = "https://api.openweathermap.org/data/2.5/weather";
 
-  static async fetchWeather(lat, lon) {
+  static async fetchWeather(
+    lat: number,
+    lon: number,
+  ): Promise<WeatherData | null> {
     const url = `${this.BASE_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${this.API_KEY}`;
     try {
       const response = await fetch(url);
@@ -501,8 +545,8 @@ class OpenWeatherAPI {
   }
   */
 
-  static getWeatherIcon(iconCode) {
-    const iconMap = {
+  static getWeatherIcon(iconCode: string): string {
+    const iconMap: Record<string, string> = {
       "01d": "☀️",
       "01n": "🌙",
       "02d": "🌤️",
@@ -542,7 +586,7 @@ function initializeMap() {
   }).addTo(state.map);
 
   // Layer group for traffic flow polylines (cleared/redrawn on each refresh)
-  state.mapLayers = state.mapLayers || {};
+  //state.mapLayers = state.mapLayers || {};
   if (state.mapLayers.traffic) state.mapLayers.traffic.clearLayers();
   state.mapLayers.traffic = L.layerGroup().addTo(state.map);
 }
@@ -555,14 +599,17 @@ function centerMap() {
 // ========================================
 // MAP: TRAFFIC FLOW RENDERING
 // ========================================
-function getTrafficColor(jamFactor, colors) {
+function getTrafficColor(
+  jamFactor: number,
+  colors: { good: string; moderate: string; heavy: string },
+): string {
   // colors: { good, moderate, heavy }
   const jf = Number(jamFactor) || 0;
   if (jf <= CONFIG.thresholds.goodMax) return colors.good;
   if (jf <= CONFIG.thresholds.moderateMax) return colors.moderate;
   return colors.heavy;
 }
-function updateTrafficMap(flowResults) {
+function updateTrafficMap(flowResults: TrafficStandardFormat[]) {
   if (!state.map || !state.mapLayers?.traffic) return;
   // Read CSS vars once (fallback to hardcoded)
   const css = getComputedStyle(document.documentElement);
@@ -593,11 +640,11 @@ function updateTrafficMap(flowResults) {
       if (latlngs.length < 2) return;
 
       const color = getTrafficColor(jam, colors);
-      const poly = L.polyline(latlngs, {
+      const poly = L.polyline(latlngs as L.LatLngExpression[], {
         color,
         weight: 3,
         opacity: 0.85,
-        dashArray: traversability === "closed" ? "6 6" : null, // dashed if closed
+        dashArray: traversability === "closed" ? "6 6" : undefined, // dashed if closed
       });
 
       /*
@@ -628,7 +675,7 @@ function updateTrafficMap(flowResults) {
         </div>
       `;
       poly.bindPopup(popupHtml);
-      poly.addTo(state.mapLayers.traffic);
+      if (state.mapLayers.traffic) poly.addTo(state.mapLayers.traffic);
     });
   });
 }
@@ -741,11 +788,11 @@ function updateSpeedTrendChart() {
     state.traffic.data.reduce((sum, d) => sum + d.speed, 0) /
     state.traffic.data.length;
 
-  chart.data.labels.push(timeLabel);
-  chart.data.datasets[0].data.push(avgSpeed.toFixed(1));
+  chart.data.labels?.push(timeLabel);
+  chart.data.datasets[0].data.push(Number(avgSpeed.toFixed(1)));
 
-  if (chart.data.labels.length > CONFIG.charts.speedTrendMaxPoints) {
-    chart.data.labels.shift();
+  if (chart.data.labels?.length ?? 0 > CONFIG.charts.speedTrendMaxPoints) {
+    chart.data.labels?.shift();
     chart.data.datasets[0].data.shift();
   }
 
@@ -780,16 +827,10 @@ function updateWeatherWidget() {
   //const city = getCityConfig();
   const { temperature, description, icon } = state.weather; // get values by key names
 
-  dom.weatherWidget.querySelector(".weather-temp").textContent = `${Math.round(
-    temperature,
-  )}°C`;
-  dom.weatherWidget.querySelector(".weather-time").textContent = formatTime(
-    CONFIG.timeZone,
-  );
-  dom.weatherWidget.querySelector(".weather-desc").textContent =
-    capitalizeFirst(description);
-  dom.weatherWidget.querySelector(".weather-icon").textContent =
-    OpenWeatherAPI.getWeatherIcon(icon);
+  dom.weatherWidgetTemp.textContent = `${Math.round(temperature)}°C`;
+  dom.weatherWidgetTime.textContent = formatTime(CONFIG.timeZone);
+  dom.weatherWidgetDescription.textContent = capitalizeFirst(description);
+  dom.weatherWidgetIcon.textContent = OpenWeatherAPI.getWeatherIcon(icon);
 
   //dom.weatherWidget.classList.add("loaded");
 }
@@ -797,7 +838,7 @@ function updateWeatherWidget() {
 // ================================
 // DATA TRANSFORMS
 // ================================
-function toTrafficListItem(flowResult) {
+function toTrafficListItem(flowResult: TrafficStandardFormat): TrafficListItem {
   const jamFactor = flowResult.currentFlow.jamFactor;
   const status = jamToStatus(jamFactor);
   return {
@@ -810,9 +851,13 @@ function toTrafficListItem(flowResult) {
   };
 }
 
-function toIncidentListItem(incidentResult) {
+function toIncidentListItem(
+  incidentResult: IncidentStandardFormat,
+): IncidentListItem {
   const startTime = new Date(incidentResult.incidentDetails.startTime);
-  const minutesAgo = Math.floor((Date.now() - startTime) / 60000);
+  const minutesAgo = Math.floor(
+    (Date.now() - new Date(startTime).getTime()) / 60000,
+  );
   const delayMinutes = Math.floor(incidentResult.impact.delayInSeconds / 60);
 
   return {
@@ -828,7 +873,7 @@ function toIncidentListItem(incidentResult) {
 // ================================
 // SORTING
 // ================================
-function sortTrafficData(sortBy) {
+function sortTrafficData(sortBy: SortOption) {
   const list = state.traffic.data;
 
   if (sortBy === "worst") {
@@ -843,6 +888,12 @@ function sortTrafficData(sortBy) {
 // ================================
 // RENDER: METRICS
 // ================================
+type Options = {
+  onProgressChange: (v: number) => void;
+};
+
+let opts: Options | null = null;
+
 function updateMetricsCards() {
   //if (!dom.metricCards?.length) return;
 
@@ -890,11 +941,11 @@ function updateMetricsCards() {
   let trendText = "";
   let trendDir = "";
   if (Number.isFinite(state.metrics.prevAvgSpeed)) {
-    const diff = avgSpeed - state.metrics.prevAvgSpeed;
+    const diff = avgSpeed - (state.metrics.prevAvgSpeed ?? 0);
     const pct =
       state.metrics.prevAvgSpeed === 0
         ? 0
-        : (diff / state.metrics.prevAvgSpeed) * 100;
+        : (diff / (state.metrics.prevAvgSpeed ?? 1)) * 100;
     trendText = `${diff >= 0 ? "▲" : "▼"} ${Math.abs(pct).toFixed(0)}%`;
     trendDir = diff >= 0 ? "up" : "down";
   }
@@ -935,27 +986,22 @@ function updateMetricsCards() {
     trend: null,
   });
   // Progress bar for health score
-  const healthCard = document.querySelector(
-    '.metric-top[data-metric="healthScore"]',
-  );
-  const bar = healthCard?.querySelector(".metric-progress > span");
-  if (bar) bar.style.width = `${healthScore}%`;
+  const healthCard = dom.healthCard;
+
+  const bar = dom.healthCardBar;
+  if (bar) {
+    opts?.onProgressChange(healthScore);
+    //bar.style.width = `${healthScore}%`;
+  }
+
+  bar.classList.remove("good", "moderate", "heavy");
 
   if (healthScore >= 70) {
-    healthCard
-      .querySelector(".metric-progress-fill")
-      .classList.remove("moderate", "heavy");
-    healthCard.querySelector(".metric-progress-fill").classList.add("good");
+    bar.classList.add("good");
   } else if (healthScore >= 40) {
-    healthCard
-      .querySelector(".metric-progress-fill")
-      .classList.remove("good", "heavy");
-    healthCard.querySelector(".metric-progress-fill").classList.add("moderate");
+    bar.classList.add("moderate");
   } else {
-    healthCard
-      .querySelector(".metric-progress-fill")
-      .classList.remove("good", "moderate");
-    healthCard.querySelector(".metric-progress-fill").classList.add("heavy");
+    bar.classList.add("heavy");
   }
 
   /*
@@ -970,7 +1016,20 @@ function updateMetricsCards() {
   */
 }
 
-function setCard(metricKey, { valueHtml, subText, footer, trend }) {
+function setCard(
+  metricKey: string,
+  {
+    valueHtml,
+    subText,
+    footer,
+    trend,
+  }: {
+    valueHtml: string;
+    subText: string | null;
+    footer: string | null;
+    trend: { text: string; dir: string } | null;
+  },
+) {
   const card = document.querySelector(
     `.metric-top[data-metric="${metricKey}"]`,
   );
@@ -1048,12 +1107,12 @@ function renderTrafficLists(applyFilter = false) {
   if (applyFilter) addFilterEffect();
 }
 
-function updateTrafficPagination(totalItems) {
+function updateTrafficPagination(totalItems: number) {
   const perPage = CONFIG.pagination.trafficItemsPerPage;
   const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
 
-  dom.trafficPagination.currentPage.textContent = state.traffic.page;
-  dom.trafficPagination.totalPages.textContent = totalPages;
+  dom.trafficPagination.currentPage.textContent = String(state.traffic.page);
+  dom.trafficPagination.totalPages.textContent = String(totalPages);
 
   // 更新按鈕狀態
   dom.trafficPagination.prevBtn.disabled = state.traffic.page === 1;
@@ -1167,12 +1226,12 @@ function renderIncidentsLists() {
   updateIncidentPagination(total);
 }
 
-function updateIncidentPagination(totalItems) {
+function updateIncidentPagination(totalItems: number) {
   const perPage = CONFIG.pagination.incidentItemsPerPage;
   const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
 
-  dom.incidentPagination.currentPage.textContent = state.incidents.page;
-  dom.incidentPagination.totalPages.textContent = totalPages;
+  dom.incidentPagination.currentPage.textContent = String(state.incidents.page);
+  dom.incidentPagination.totalPages.textContent = String(totalPages);
 
   // 更新按鈕狀態
   dom.incidentPagination.prevBtn.disabled = state.incidents.page === 1;
@@ -1190,7 +1249,7 @@ async function loadDashboardData() {
   // Promise.all: run independent network calls in parallel to reduce total wait time.
   // Important: Promise.all rejects if ANY promise rejects. To avoid losing all data due
   // to a single failing request, we wrap each request with a local fallback.
-  const safe = async (promise, fallbackFn) => {
+  const safe = async (promise: Promise<any>, fallbackFn: () => any) => {
     try {
       const result = await promise;
       return result ?? fallbackFn();
@@ -1203,15 +1262,13 @@ async function loadDashboardData() {
   const trafficPromise =
     state.dataMode === "live"
       ? safe(TomTomAPI.fetchTrafficFlow(city.roads), () =>
-          generateMockTrafficFlow(city.roads),
+          generateMockTrafficFlow(),
         )
-      : Promise.resolve(generateMockTrafficFlow(city.roads)); // wrap to Promise
+      : Promise.resolve(generateMockTrafficFlow()); // wrap to Promise
   const incidentsPromise =
     state.dataMode === "live"
-      ? safe(TomTomAPI.fetchIncidents(city.bbox), () =>
-          generateMockIncidents(city.roads),
-        )
-      : Promise.resolve(generateMockIncidents(city.roads)); // wrap to Promise
+      ? safe(TomTomAPI.fetchIncidents(city.bbox), () => generateMockIncidents())
+      : Promise.resolve(generateMockIncidents()); // wrap to Promise
 
   // Traffic + Incidents
   /*
@@ -1305,7 +1362,7 @@ function setupEventListeners() {
   // City selector
   const cityChangeHandler = async () => {
     showLoading();
-    setCity((dom.cityDropdown as any).value);
+    setCity(dom.cityDropdown.value);
     initializeMap();
     await initializeDashboard();
     hideLoading();
@@ -1330,7 +1387,7 @@ function setupEventListeners() {
   // Traffic sort
   const trafficSortHandler = () => {
     state.traffic.page = 1;
-    const sortBy = dom.sortDropdown.value;
+    const sortBy = dom.sortDropdown.value as SortOption;
     const applyFilter = sortBy === state.sort;
 
     sortTrafficData(sortBy);
@@ -1342,7 +1399,7 @@ function setupEventListeners() {
 
   // Incident filters
   const incidentTypeHandler = () => {
-    state.incidents.filters.type = (dom.incidentTypeFilter as any).value;
+    state.incidents.filters.type = dom.incidentTypeFilter.value;
     state.incidents.page = 1;
     renderIncidentsLists();
     updateMetricsCards();
@@ -1350,7 +1407,7 @@ function setupEventListeners() {
   on(dom.incidentTypeFilter, "change", incidentTypeHandler);
 
   const incidentRoadHandler = () => {
-    state.incidents.filters.roadQuery = (dom.incidentRoadSearch as any).value;
+    state.incidents.filters.roadQuery = dom.incidentRoadSearch.value;
     state.incidents.page = 1;
     renderIncidentsLists();
     updateMetricsCards();
@@ -1440,7 +1497,10 @@ let __bootstrapped = false;
  * Bootstraps the dashboard AFTER React has rendered the HTML.
  * We guard it so hot-reload / double-calls won't register events twice.
  */
-export async function bootstrapTrafficDashboard(): Promise<DashboardHandle> {
+export async function bootstrapTrafficDashboard(
+  o: Options,
+): Promise<DashboardHandle> {
+  opts = o; // assign to outer variable for use in updateMetricsCards
   if (__bootstrapped && __handle) return __handle;
   // If we crash during bootstrap, we reset this back to false so you can
   // hot-reload and retry without refreshing the whole page.
