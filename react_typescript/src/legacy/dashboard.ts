@@ -890,6 +890,12 @@ function sortTrafficData(sortBy: SortOption) {
 // ================================
 type Options = {
   onProgressChange: (v: number) => void;
+  onTrafficPageData?: (payload: {
+    items: TrafficListItem[];
+    page: number;
+    totalPages: number;
+    totalItems: number;
+  }) => void;
 };
 
 let opts: Options | null = null;
@@ -1057,9 +1063,10 @@ function setCard(
 // RENDER: TRAFFIC LIST
 // ================================
 function renderTrafficLists(applyFilter = false) {
-  if (!dom.trafficItemsContainer) return;
+  //const reactMode = typeof opts?.onTrafficPageData === "function";
 
-  dom.trafficItemsContainer.innerHTML = "";
+  //if (!reactMode && !dom.trafficItemsContainer) return;
+  //if (!reactMode) dom.trafficItemsContainer.innerHTML = "";
 
   const total = state.traffic.data.length;
   const perPage = CONFIG.pagination.trafficItemsPerPage;
@@ -1075,7 +1082,19 @@ function renderTrafficLists(applyFilter = false) {
   //const oldItems = trafficList.querySelectorAll(".traffic-item");
   //oldItems.forEach((item) => item.remove());
 
-  pageData.forEach((data) => {
+  //if (reactMode) {
+  opts?.onTrafficPageData?.({
+    items: pageData,
+    page: state.traffic.page,
+    totalPages,
+    totalItems: total,
+  });
+  updateTrafficPagination(total);
+  if (applyFilter) setTimeout(addFilterEffect, 0);
+  return;
+  //}
+
+  /* pageData.forEach((data) => {
     const item = document.createElement("div");
     item.classList.add("traffic-item");
 
@@ -1104,7 +1123,7 @@ function renderTrafficLists(applyFilter = false) {
   });
 
   updateTrafficPagination(total);
-  if (applyFilter) addFilterEffect();
+  if (applyFilter) addFilterEffect(); */
 }
 
 function updateTrafficPagination(totalItems: number) {

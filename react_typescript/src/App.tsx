@@ -4,6 +4,8 @@ import {
   bootstrapTrafficDashboard,
   type DashboardHandle,
 } from "./legacy/index.js";
+import { TrafficListItem } from "./legacy/types.js";
+import TrafficItems from "./components/TrafficItems.js";
 
 /**
  * Day 1 goal:
@@ -18,6 +20,8 @@ export default function App() {
   // don't use state, because we don't need to re-render when it changes
   const dashRef = useRef<DashboardHandle | null>(null); // initialize with null
   const [progress, setProgress] = useState(0);
+  const [trafficItems, setTrafficItems] = useState<TrafficListItem[]>([]);
+  const [trafficLoading, setTrafficLoading] = useState(true);
 
   // 元件第一次 render 完後跑一次, 之後不會因為 state 改變重跑
   useEffect(() => {
@@ -28,9 +32,19 @@ export default function App() {
       setProgress(v);
     };
 
+    const onTrafficPageData = ({ items }: { items: TrafficListItem[] }) => {
+      if (!alive) return;
+      // 之後的畫面更新靠這兩行，讓 React 重新 render
+      setTrafficItems(items);
+      setTrafficLoading(false);
+    };
+
     // Run after the first render so all #id and .class elements exist.
     // ① effect：做事（訂閱、請求、操作 DOM、啟動東西）
-    bootstrapTrafficDashboard({ onProgressChange })
+    bootstrapTrafficDashboard({
+      onProgressChange,
+      onTrafficPageData,
+    })
       .then((handle) => {
         // handle is { centerMap, destroy }
         if (!alive) {
@@ -280,62 +294,7 @@ export default function App() {
           </div>
 
           <div className="traffic-items-container">
-            <div className="traffic-item">
-              <div className="street-info">
-                <div className="street-name">O'Connell Street</div>
-                <div className="jam-indicator">
-                  <div className="jam-bar">
-                    <div
-                      className="jam-fill good"
-                      style={{ width: "20%" }}
-                    ></div>
-                  </div>
-                  <span className="jam-text">Jam: 2.1/10</span>
-                </div>
-              </div>
-              <div className="traffic-info">
-                <span className="speed">45 km/h</span>
-                <span className="status-badge status-good">Good</span>
-              </div>
-            </div>
-
-            <div className="traffic-item">
-              <div className="street-info">
-                <div className="street-name">Grafton Street</div>
-                <div className="jam-indicator">
-                  <div className="jam-bar">
-                    <div
-                      className="jam-fill moderate"
-                      style={{ width: "65%" }}
-                    ></div>
-                  </div>
-                  <span className="jam-text">Jam: 6.5/10</span>
-                </div>
-              </div>
-              <div className="traffic-info">
-                <span className="speed">28 km/h</span>
-                <span className="status-badge status-moderate">Moderate</span>
-              </div>
-            </div>
-
-            <div className="traffic-item">
-              <div className="street-info">
-                <div className="street-name">Dame Street</div>
-                <div className="jam-indicator">
-                  <div className="jam-bar">
-                    <div
-                      className="jam-fill heavy"
-                      style={{ width: "92%" }}
-                    ></div>
-                  </div>
-                  <span className="jam-text">Jam: 9.2/10</span>
-                </div>
-              </div>
-              <div className="traffic-info">
-                <span className="speed">15 km/h</span>
-                <span className="status-badge status-heavy">Heavy</span>
-              </div>
-            </div>
+            <TrafficItems items={trafficItems} isLoading={trafficLoading} />
           </div>
 
           <div className="pagination traffic-pagination">
