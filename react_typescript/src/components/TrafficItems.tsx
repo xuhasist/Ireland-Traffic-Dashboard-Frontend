@@ -1,4 +1,4 @@
-import type { TrafficListItem } from "../legacy/types.js";
+import type { TrafficListItem } from "../legacy/types";
 
 type Props = {
   items: TrafficListItem[];
@@ -11,8 +11,9 @@ function capitalizeFirst(s: string): string {
 }
 
 export default function TrafficItems({ items, isLoading }: Props) {
-  if (isLoading) {
-    return (
+  if (isLoading || !items || items.length === 0) {
+    return null;
+    /* return (
       <>
         {Array.from({ length: 3 }).map((_, i) => (
           <div className="traffic-item" key={i}>
@@ -32,10 +33,10 @@ export default function TrafficItems({ items, isLoading }: Props) {
           </div>
         ))}
       </>
-    );
+    ); */
   }
 
-  if (!items || items.length === 0) {
+  /* if (!items || items.length === 0) {
     return (
       <div className="traffic-item" key="no-data">
         <div className="street-info">
@@ -53,14 +54,14 @@ export default function TrafficItems({ items, isLoading }: Props) {
         </div>
       </div>
     );
-  }
+  } */
 
   return (
     <>
       {items.map((item) => {
         const jamWidth = (item.jamLevel / 10) * 100;
         return (
-          <div className="traffic-item" key={`${item.name}`}>
+          <div className="traffic-item" /*  key={`${item.name}`} */>
             <div className="street-info">
               <div className="street-name">{item.name}</div>
               <div className="jam-indicator">

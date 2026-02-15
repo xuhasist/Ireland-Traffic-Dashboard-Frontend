@@ -7,6 +7,9 @@ export type DashboardHandle = {
   prevTrafficPage: () => void;
   nextTrafficPage: () => void;
   //setTrafficPage: (page: number) => void;
+
+  prevIncidentPage: () => void;
+  nextIncidentPage: () => void;
 };
 
 // Small helper type for Leaflet coordinates

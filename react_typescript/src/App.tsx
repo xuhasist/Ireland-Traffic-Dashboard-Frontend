@@ -4,8 +4,9 @@ import {
   bootstrapTrafficDashboard,
   type DashboardHandle,
 } from "./legacy/index";
-import { TrafficListItem } from "./legacy/types";
+import { IncidentListItem, TrafficListItem } from "./legacy/types";
 import TrafficItems from "./components/TrafficItems";
+import IncidentItems from "./components/IncidentItems";
 import Pagination from "./components/Pagination";
 
 /**
@@ -25,6 +26,10 @@ export default function App() {
   const [trafficLoading, setTrafficLoading] = useState(true);
   const [trafficPage, setTrafficPage] = useState(1);
   const [trafficTotalPages, setTrafficTotalPages] = useState(1);
+  const [incidentItems, setIncidentItems] = useState<IncidentListItem[]>([]);
+  const [incidentLoading, setIncidentLoading] = useState(true);
+  const [incidentPage, setIncidentPage] = useState(1);
+  const [incidentTotalPages, setIncidentTotalPages] = useState(1);
 
   // 元件第一次 render 完後跑一次, 之後不會因為 state 改變重跑
   useEffect(() => {
@@ -54,11 +59,29 @@ export default function App() {
       setTrafficLoading(false);
     };
 
+    const onIncidentPageData = ({
+      items,
+      page,
+      totalPages,
+    }: {
+      items: IncidentListItem[];
+      page: number;
+      totalPages: number;
+    }) => {
+      if (!alive) return;
+      // 之後的畫面更新靠這兩行，讓 React 重新 render
+      setIncidentItems(items);
+      setIncidentPage(page);
+      setIncidentTotalPages(totalPages);
+      setIncidentLoading(false);
+    };
+
     // Run after the first render so all #id and .class elements exist.
     // ① effect：做事（訂閱、請求、操作 DOM、啟動東西）
     bootstrapTrafficDashboard({
       onProgressChange,
       onTrafficPageData,
+      onIncidentPageData,
     })
       .then((handle) => {
         // handle is { centerMap, destroy }
@@ -348,48 +371,17 @@ export default function App() {
           </div>
 
           <div className="incident-items-container">
-            <div className="incident-item">
-              <div className="incident-icon">🚨</div>
-              <div className="incident-details">
-                <div className="incident-type">Accident</div>
-                <div className="incident-location">
-                  Dame Street near Trinity College
-                </div>
-                <div className="incident-time">15 mins ago • 20 min delay</div>
-              </div>
-            </div>
-
-            <div className="incident-item">
-              <div className="incident-icon">🚧</div>
-              <div className="incident-details">
-                <div className="incident-type">Roadwork</div>
-                <div className="incident-location">Parnell Street</div>
-                <div className="incident-time">2 hours ago • 10 min delay</div>
-              </div>
-            </div>
-
-            <div className="incident-item">
-              <div className="incident-icon">⚡</div>
-              <div className="incident-details">
-                <div className="incident-type">Heavy Traffic</div>
-                <div className="incident-location">M50 Northbound</div>
-                <div className="incident-time">5 mins ago • 5 min delay</div>
-              </div>
-            </div>
+            <IncidentItems items={incidentItems} isLoading={incidentLoading} />
           </div>
 
-          <div className="pagination incident-pagination">
-            <button className="pagination-btn" id="incidentPrevPage">
-              ← Prev
-            </button>
-            <span className="pagination-info">
-              Page <span id="incidentCurrentPage">1</span> of
-              <span id="incidentTotalPages">9</span>
-            </span>
-            <button className="pagination-btn" id="incidentNextPage">
-              Next →
-            </button>
-          </div>
+          <Pagination
+            kind="incident"
+            page={incidentPage}
+            totalPages={incidentTotalPages}
+            disabled={incidentLoading}
+            onPrev={() => dashRef.current?.prevIncidentPage()}
+            onNext={() => dashRef.current?.nextIncidentPage()}
+          />
         </div>
         {/*incidents-section end*/}
       </div>

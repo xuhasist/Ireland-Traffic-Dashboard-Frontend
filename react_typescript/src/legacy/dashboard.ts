@@ -615,6 +615,25 @@ function nextTrafficPage() {
   setTrafficPage(state.traffic.page + 1);
 }
 
+function setIncidentPage(page: number) {
+  const perPage = CONFIG.pagination.incidentItemsPerPage;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(state.incidents.data.length / perPage),
+  );
+
+  state.incidents.page = clamp(page, 1, totalPages);
+  renderIncidentsLists();
+}
+
+function prevIncidentPage() {
+  setIncidentPage(state.incidents.page - 1);
+}
+
+function nextIncidentPage() {
+  setIncidentPage(state.incidents.page + 1);
+}
+
 // ========================================
 // MAP: TRAFFIC FLOW RENDERING
 // ========================================
@@ -916,6 +935,11 @@ type Options = {
     page: number;
     totalPages: number;
     //totalItems: number;
+  }) => void;
+  onIncidentPageData?: (payload: {
+    items: IncidentListItem[];
+    page: number;
+    totalPages: number;
   }) => void;
 };
 
@@ -1224,14 +1248,14 @@ function refreshIncidentTypeOptions() {
 }
 
 function renderIncidentsLists() {
-  if (!dom.incidentItemsContainer) return;
-  dom.incidentItemsContainer.innerHTML = "";
+  //if (!dom.incidentItemsContainer) return;
+  //dom.incidentItemsContainer.innerHTML = "";
 
   const validIncidents = getFilteredIncidents();
   // Update badge
-  if (dom.incidentCountBadge) {
-    dom.incidentCountBadge.textContent = `${validIncidents.length}`;
-  }
+  //if (dom.incidentCountBadge) {
+  //dom.incidentCountBadge.textContent = `${validIncidents.length}`;
+  //}
 
   const total = validIncidents.length;
   const perPage = CONFIG.pagination.incidentItemsPerPage;
@@ -1241,11 +1265,18 @@ function renderIncidentsLists() {
   const endIndex = startIndex + perPage;
   const pageData = validIncidents.slice(startIndex, endIndex);
 
+  opts?.onIncidentPageData?.({
+    items: pageData,
+    page: state.incidents.page,
+    totalPages,
+    //totalItems: total,
+  });
+
   //const incidentSection = document.querySelector(".incidents-section");
   //const oldItems = incidentSection.querySelectorAll(".incident-item");
   //oldItems.forEach((item) => item.remove());
 
-  pageData.forEach((data) => {
+  /* pageData.forEach((data) => {
     //if (data.severity === "Unknown") return;
     const item = document.createElement("div");
     item.classList.add("incident-item", `incident-${data.severity}`);
@@ -1263,10 +1294,10 @@ function renderIncidentsLists() {
     dom.incidentItemsContainer.appendChild(item);
   });
 
-  updateIncidentPagination(total);
+  updateIncidentPagination(total); */
 }
 
-function updateIncidentPagination(totalItems: number) {
+/* function updateIncidentPagination(totalItems: number) {
   const perPage = CONFIG.pagination.incidentItemsPerPage;
   const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
 
@@ -1276,7 +1307,7 @@ function updateIncidentPagination(totalItems: number) {
   // 更新按鈕狀態
   dom.incidentPagination.prevBtn.disabled = state.incidents.page === 1;
   dom.incidentPagination.nextBtn.disabled = state.incidents.page === totalPages;
-}
+} */
 
 // ================================
 // DATA LOAD
@@ -1618,6 +1649,8 @@ export async function bootstrapTrafficDashboard(
       prevTrafficPage,
       nextTrafficPage,
       //setTrafficPage,
+      prevIncidentPage,
+      nextIncidentPage,
     };
     return __handle;
   } catch (err) {
