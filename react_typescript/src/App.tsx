@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from "react"; // React hook
 import {
   bootstrapTrafficDashboard,
   type DashboardHandle,
-} from "./legacy/index.js";
-import { TrafficListItem } from "./legacy/types.js";
-import TrafficItems from "./components/TrafficItems.js";
+} from "./legacy/index";
+import { TrafficListItem } from "./legacy/types";
+import TrafficItems from "./components/TrafficItems";
+import Pagination from "./components/Pagination";
 
 /**
  * Day 1 goal:
@@ -22,6 +23,8 @@ export default function App() {
   const [progress, setProgress] = useState(0);
   const [trafficItems, setTrafficItems] = useState<TrafficListItem[]>([]);
   const [trafficLoading, setTrafficLoading] = useState(true);
+  const [trafficPage, setTrafficPage] = useState(1);
+  const [trafficTotalPages, setTrafficTotalPages] = useState(1);
 
   // 元件第一次 render 完後跑一次, 之後不會因為 state 改變重跑
   useEffect(() => {
@@ -32,10 +35,22 @@ export default function App() {
       setProgress(v);
     };
 
-    const onTrafficPageData = ({ items }: { items: TrafficListItem[] }) => {
+    // 接收端（App） 決定「我用 payload 裡哪些欄位」
+    // receiver decides what fields in the payload to use
+    const onTrafficPageData = ({
+      items,
+      page,
+      totalPages,
+    }: {
+      items: TrafficListItem[];
+      page: number;
+      totalPages: number;
+    }) => {
       if (!alive) return;
       // 之後的畫面更新靠這兩行，讓 React 重新 render
       setTrafficItems(items);
+      setTrafficPage(page);
+      setTrafficTotalPages(totalPages);
       setTrafficLoading(false);
     };
 
@@ -297,18 +312,14 @@ export default function App() {
             <TrafficItems items={trafficItems} isLoading={trafficLoading} />
           </div>
 
-          <div className="pagination traffic-pagination">
-            <button className="pagination-btn" id="trafficPrevPage">
-              ← Prev
-            </button>
-            <span className="pagination-info">
-              Page <span id="trafficCurrentPage">1</span> of
-              <span id="trafficTotalPages">9</span>
-            </span>
-            <button className="pagination-btn" id="trafficNextPage">
-              Next →
-            </button>
-          </div>
+          <Pagination
+            kind="traffic"
+            page={trafficPage}
+            totalPages={trafficTotalPages}
+            disabled={trafficLoading}
+            onPrev={() => dashRef.current?.prevTrafficPage()}
+            onNext={() => dashRef.current?.nextTrafficPage()}
+          />
         </div>
         {/*traffic-list end*/}
 

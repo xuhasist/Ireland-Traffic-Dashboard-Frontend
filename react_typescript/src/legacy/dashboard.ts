@@ -596,6 +596,25 @@ function centerMap() {
   if (state.map) state.map.setView(city.center, CONFIG.zoom);
 }
 
+function setTrafficPage(page: number) {
+  const perPage = CONFIG.pagination.trafficItemsPerPage;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(state.traffic.data.length / perPage),
+  );
+
+  state.traffic.page = clamp(page, 1, totalPages);
+  renderTrafficLists();
+}
+
+function prevTrafficPage() {
+  setTrafficPage(state.traffic.page - 1);
+}
+
+function nextTrafficPage() {
+  setTrafficPage(state.traffic.page + 1);
+}
+
 // ========================================
 // MAP: TRAFFIC FLOW RENDERING
 // ========================================
@@ -888,13 +907,15 @@ function sortTrafficData(sortBy: SortOption) {
 // ================================
 // RENDER: METRICS
 // ================================
+// 呼叫端（dashboard/legacy） 決定「會傳什麼 payload」
+// caller decides what payload to pass in
 type Options = {
   onProgressChange: (v: number) => void;
   onTrafficPageData?: (payload: {
     items: TrafficListItem[];
     page: number;
     totalPages: number;
-    totalItems: number;
+    //totalItems: number;
   }) => void;
 };
 
@@ -1087,9 +1108,9 @@ function renderTrafficLists(applyFilter = false) {
     items: pageData,
     page: state.traffic.page,
     totalPages,
-    totalItems: total,
+    //totalItems: total,
   });
-  updateTrafficPagination(total);
+  //updateTrafficPagination(total);
   if (applyFilter) setTimeout(addFilterEffect, 0);
   return;
   //}
@@ -1126,7 +1147,7 @@ function renderTrafficLists(applyFilter = false) {
   if (applyFilter) addFilterEffect(); */
 }
 
-function updateTrafficPagination(totalItems: number) {
+/* function updateTrafficPagination(totalItems: number) {
   const perPage = CONFIG.pagination.trafficItemsPerPage;
   const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
 
@@ -1136,7 +1157,7 @@ function updateTrafficPagination(totalItems: number) {
   // 更新按鈕狀態
   dom.trafficPagination.prevBtn.disabled = state.traffic.page === 1;
   dom.trafficPagination.nextBtn.disabled = state.traffic.page === totalPages;
-}
+} */
 
 function addFilterEffect() {
   const trafficItems = document.querySelectorAll(".traffic-item");
@@ -1433,11 +1454,11 @@ function setupEventListeners() {
   };
   on(dom.incidentRoadSearch, "input", incidentRoadHandler);
 
-  setupTrafficPagination();
+  //setupTrafficPagination();
   setupIncidentPagination();
 }
 
-function setupTrafficPagination() {
+/* function setupTrafficPagination() {
   const prev = dom.trafficPagination.prevBtn;
   const next = dom.trafficPagination.nextBtn;
 
@@ -1459,7 +1480,7 @@ function setupTrafficPagination() {
 
   on(prev, "click", prevHandler);
   on(next, "click", nextHandler);
-}
+} */
 
 function setupIncidentPagination() {
   const prev = dom.incidentPagination.prevBtn;
@@ -1591,7 +1612,13 @@ export async function bootstrapTrafficDashboard(
       __bootstrapped = false;
     };
 
-    __handle = { centerMap, destroy };
+    __handle = {
+      centerMap,
+      destroy,
+      prevTrafficPage,
+      nextTrafficPage,
+      //setTrafficPage,
+    };
     return __handle;
   } catch (err) {
     // If anything throws, keep the page usable and visible.

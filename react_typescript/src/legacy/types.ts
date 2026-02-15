@@ -2,6 +2,11 @@
 export type DashboardHandle = {
   centerMap: () => void;
   destroy: () => void;
+
+  // React-driven pagination controls (traffic list)
+  prevTrafficPage: () => void;
+  nextTrafficPage: () => void;
+  //setTrafficPage: (page: number) => void;
 };
 
 // Small helper type for Leaflet coordinates
