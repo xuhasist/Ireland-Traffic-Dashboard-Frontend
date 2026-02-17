@@ -56,13 +56,13 @@ function updateAutoUpdateButton(isRunning: boolean): void {
 
 function showLoading() {
   dom.container.classList.remove("loaded");
-  dom.weatherWidget.classList.remove("loaded");
+  //dom.weatherWidget.classList.remove("loaded");
   dom.loadingOverlay?.classList.add("active");
 }
 function hideLoading() {
   dom.loadingOverlay?.classList.remove("active");
   dom.container.classList.add("loaded");
-  dom.weatherWidget.classList.add("loaded");
+  //dom.weatherWidget.classList.add("loaded");
 }
 
 function formatTime(timeZone: string): string {
@@ -634,6 +634,15 @@ function nextIncidentPage() {
   setIncidentPage(state.incidents.page + 1);
 }
 
+// ================================
+// WEATHER (React-owned)
+// ================================
+function emitWeatherToReact() {
+  if (!opts?.onWeatherData) return;
+  if (!state.weather) return;
+  opts.onWeatherData(state.weather);
+}
+
 // ========================================
 // MAP: TRAFFIC FLOW RENDERING
 // ========================================
@@ -859,7 +868,7 @@ function updateCongestionChart() {
 // ================================
 // WEATHER WIDGET
 // ================================
-function updateWeatherWidget() {
+/* function updateWeatherWidget() {
   if (!dom.weatherWidget || !state.weather) return;
 
   //const city = getCityConfig();
@@ -871,7 +880,7 @@ function updateWeatherWidget() {
   dom.weatherWidgetIcon.textContent = OpenWeatherAPI.getWeatherIcon(icon);
 
   //dom.weatherWidget.classList.add("loaded");
-}
+} */
 
 // ================================
 // DATA TRANSFORMS
@@ -941,6 +950,7 @@ type Options = {
     page: number;
     totalPages: number;
   }) => void;
+  onWeatherData?: (data: WeatherData) => void;
 };
 
 let opts: Options | null = null;
@@ -1380,7 +1390,8 @@ async function initializeDashboard({ flashFilter = false } = {}) {
   // Draw traffic flow on the map using raw flow segments
   updateTrafficMap(state.traffic.raw);
   sortTrafficData(state.sort);
-  updateWeatherWidget();
+  //updateWeatherWidget();
+  emitWeatherToReact();
   updateMetricsCards();
   updateSpeedTrendChart();
   updateCongestionChart();

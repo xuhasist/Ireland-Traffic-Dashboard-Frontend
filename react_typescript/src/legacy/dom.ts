@@ -21,12 +21,12 @@ export type DomCache = {
   autoUpdateBtn: HTMLButtonElement;
   autoUpdateBtnIcon: HTMLSpanElement;
   autoUpdateBtnText: HTMLSpanElement;
-  // weather
+  /*   // weather
   weatherWidget: HTMLDivElement;
   weatherWidgetTemp: HTMLDivElement;
   weatherWidgetTime: HTMLDivElement;
   weatherWidgetIcon: HTMLDivElement;
-  weatherWidgetDescription: HTMLDivElement;
+  weatherWidgetDescription: HTMLDivElement; */
   // map
   mapEl: HTMLDivElement;
   centerMapBtn: HTMLButtonElement;
@@ -109,7 +109,7 @@ export function cacheDom() {
     HTMLSpanElement,
   )!;
 
-  // weather
+  /* // weather
   dom.weatherWidget = requiredById("weatherWidget", HTMLDivElement);
   dom.weatherWidgetTemp = requiredChild(
     dom.weatherWidget,
@@ -130,7 +130,7 @@ export function cacheDom() {
     dom.weatherWidget,
     ".weather-desc",
     HTMLDivElement,
-  )!;
+  )!; */
 
   // map
   dom.mapEl = requiredById("map", HTMLDivElement);

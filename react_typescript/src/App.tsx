@@ -4,10 +4,11 @@ import {
   bootstrapTrafficDashboard,
   type DashboardHandle,
 } from "./legacy/index";
-import { IncidentListItem, TrafficListItem } from "./legacy/types";
+import { IncidentListItem, TrafficListItem, WeatherData } from "./legacy/types";
 import TrafficItems from "./components/TrafficItems";
 import IncidentItems from "./components/IncidentItems";
 import Pagination from "./components/Pagination";
+import WeatherWidget from "./components/WeatherWidget";
 
 /**
  * Day 1 goal:
@@ -22,14 +23,19 @@ export default function App() {
   // don't use state, because we don't need to re-render when it changes
   const dashRef = useRef<DashboardHandle | null>(null); // initialize with null
   const [progress, setProgress] = useState(0);
+
   const [trafficItems, setTrafficItems] = useState<TrafficListItem[]>([]);
   const [trafficLoading, setTrafficLoading] = useState(true);
   const [trafficPage, setTrafficPage] = useState(1);
   const [trafficTotalPages, setTrafficTotalPages] = useState(1);
+
   const [incidentItems, setIncidentItems] = useState<IncidentListItem[]>([]);
   const [incidentLoading, setIncidentLoading] = useState(true);
   const [incidentPage, setIncidentPage] = useState(1);
   const [incidentTotalPages, setIncidentTotalPages] = useState(1);
+
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
 
   // 元件第一次 render 完後跑一次, 之後不會因為 state 改變重跑
   useEffect(() => {
@@ -76,12 +82,19 @@ export default function App() {
       setIncidentLoading(false);
     };
 
+    const onWeatherData = (data: WeatherData) => {
+      if (!alive) return;
+      setWeatherData(data);
+      setWeatherLoading(false);
+    };
+
     // Run after the first render so all #id and .class elements exist.
     // ① effect：做事（訂閱、請求、操作 DOM、啟動東西）
     bootstrapTrafficDashboard({
       onProgressChange,
       onTrafficPageData,
       onIncidentPageData,
+      onWeatherData,
     })
       .then((handle) => {
         // handle is { centerMap, destroy }
@@ -117,16 +130,7 @@ export default function App() {
 
         <div className="navbar-right">
           {/*Weather Widget*/}
-          <div className="weather-widget" id="weatherWidget">
-            <div className="weather-icon">🌤️</div>
-            <div className="weather-info">
-              <div className="weather-temp-row">
-                <div className="weather-temp">--°C</div>
-                <div className="weather-time">--:--</div>
-              </div>
-              <div className="weather-desc">Loading...</div>
-            </div>
-          </div>
+          <WeatherWidget data={weatherData} isLoading={weatherLoading} />
 
           <div className="city-selector">
             <span className="time-label">City:</span>
