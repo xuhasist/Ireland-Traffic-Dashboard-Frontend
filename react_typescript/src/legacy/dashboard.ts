@@ -10,6 +10,7 @@ import {
   IncidentDetails,
   IncidentListItem,
   IncidentStandardFormat,
+  MetricsPayload,
   Road,
   SortOption,
   TrafficListItem,
@@ -65,14 +66,6 @@ function hideLoading() {
   //dom.weatherWidget.classList.add("loaded");
 }
 
-function formatTime(timeZone: string): string {
-  return new Date().toLocaleTimeString("en-GB", {
-    timeZone: timeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
 function formatTimeWithSeconds(timeZone: string): string {
   return new Date().toLocaleTimeString("en-GB", {
     timeZone: timeZone,
@@ -634,15 +627,6 @@ function nextIncidentPage() {
   setIncidentPage(state.incidents.page + 1);
 }
 
-// ================================
-// WEATHER (React-owned)
-// ================================
-function emitWeatherToReact() {
-  if (!opts?.onWeatherData) return;
-  if (!state.weather) return;
-  opts.onWeatherData(state.weather);
-}
-
 // ========================================
 // MAP: TRAFFIC FLOW RENDERING
 // ========================================
@@ -868,19 +852,11 @@ function updateCongestionChart() {
 // ================================
 // WEATHER WIDGET
 // ================================
-/* function updateWeatherWidget() {
-  if (!dom.weatherWidget || !state.weather) return;
-
-  //const city = getCityConfig();
-  const { temperature, description, icon } = state.weather; // get values by key names
-
-  dom.weatherWidgetTemp.textContent = `${Math.round(temperature)}°C`;
-  dom.weatherWidgetTime.textContent = formatTime(CONFIG.timeZone);
-  dom.weatherWidgetDescription.textContent = capitalizeFirst(description);
-  dom.weatherWidgetIcon.textContent = OpenWeatherAPI.getWeatherIcon(icon);
-
-  //dom.weatherWidget.classList.add("loaded");
-} */
+function updateWeatherWidget() {
+  if (!opts?.onWeatherData) return;
+  if (!state.weather) return;
+  opts.onWeatherData(state.weather);
+}
 
 // ================================
 // DATA TRANSFORMS
@@ -938,7 +914,7 @@ function sortTrafficData(sortBy: SortOption) {
 // 呼叫端（dashboard/legacy） 決定「會傳什麼 payload」
 // caller decides what payload to pass in
 type Options = {
-  onProgressChange: (v: number) => void;
+  //onProgressChange: (v: number) => void;
   onTrafficPageData?: (payload: {
     items: TrafficListItem[];
     page: number;
@@ -950,12 +926,16 @@ type Options = {
     page: number;
     totalPages: number;
   }) => void;
+  onIncidentsCountChange?: (count: number) => void;
   onWeatherData?: (data: WeatherData) => void;
+  onMetricsData?: (data: MetricsPayload) => void;
 };
 
 let opts: Options | null = null;
 
 function updateMetricsCards() {
+  if (!opts?.onMetricsData) return;
+
   //if (!dom.metricCards?.length) return;
 
   const traffic = state.traffic.data ?? [];
@@ -1000,7 +980,7 @@ function updateMetricsCards() {
 
   // Trend vs previous average speed (per refresh)
   let trendText = "";
-  let trendDir = "";
+  let trend: MetricsPayload["trend"] = null;
   if (Number.isFinite(state.metrics.prevAvgSpeed)) {
     const diff = avgSpeed - (state.metrics.prevAvgSpeed ?? 0);
     const pct =
@@ -1008,73 +988,22 @@ function updateMetricsCards() {
         ? 0
         : (diff / (state.metrics.prevAvgSpeed ?? 1)) * 100;
     trendText = `${diff >= 0 ? "▲" : "▼"} ${Math.abs(pct).toFixed(0)}%`;
-    trendDir = diff >= 0 ? "up" : "down";
+    trend = { text: trendText, dir: diff >= 0 ? "up" : "down" };
   }
   state.metrics.prevAvgSpeed = avgSpeed;
 
-  //const sourceText = state.dataMode === "live" ? "Live API" : "Mock Data";
-  const footer = `Updated ${updatedAt}`;
-
-  setCard("avgSpeed", {
-    // .toFixed(0) will change Number to String
-    valueHtml: `${avgSpeed.toFixed(0)} <span class="unit">km/h</span>`,
-    subText: null,
-    footer: footer,
-    trend: trendText ? { text: trendText, dir: trendDir } : null,
+  opts?.onMetricsData?.({
+    avgSpeed,
+    commuteTime: avgTravelTime,
+    congestedRoads,
+    activeIncidentsFiltered,
+    activeIncidentsTotal: activeIncidents,
+    avgJam,
+    healthScore,
+    updatedAt,
+    jamThreshold: CONFIG.thresholds.moderateMax,
+    trend: trend,
   });
-  setCard("commuteTime", {
-    valueHtml: `${avgTravelTime} <span class="unit">min</span>`,
-    subText: `Based on ${congestedRoads} congested road(s)`,
-    footer: `${footer}`,
-    trend: null,
-  });
-  setCard("congestedRoads", {
-    valueHtml: `${congestedRoads}`,
-    subText: `Jam ≥ ${CONFIG.thresholds.moderateMax}/10`,
-    footer: `${footer}`,
-    trend: null,
-  });
-  setCard("activeIncidents", {
-    valueHtml: `${activeIncidentsFiltered} <span class="unit">/ ${activeIncidents}</span>`,
-    subText: `Filtered by type/road`,
-    footer: `${footer}`,
-    trend: null,
-  });
-  setCard("healthScore", {
-    valueHtml: `${healthScore} <span class="unit">/ 100</span>`,
-    subText: `Avg Jam ${avgJam.toFixed(1)}/10`,
-    footer: `${footer}`,
-    trend: null,
-  });
-  // Progress bar for health score
-  const healthCard = dom.healthCard;
-
-  const bar = dom.healthCardBar;
-  if (bar) {
-    opts?.onProgressChange(healthScore);
-    //bar.style.width = `${healthScore}%`;
-  }
-
-  bar.classList.remove("good", "moderate", "heavy");
-
-  if (healthScore >= 70) {
-    bar.classList.add("good");
-  } else if (healthScore >= 40) {
-    bar.classList.add("moderate");
-  } else {
-    bar.classList.add("heavy");
-  }
-
-  /*
-  dom.metricCards[0].querySelector(
-    ".value"
-  ).innerHTML = `${avgSpeed} <span class="unit">km/h</span>`;
-  dom.metricCards[1].querySelector(
-    ".value"
-  ).innerHTML = `${avgTravelTime} <span class="unit">min</span>`;
-  dom.metricCards[2].querySelector(".value").textContent = congestedStreets;
-  dom.metricCards[3].querySelector(".value").textContent = activeIncidents;
-  */
 }
 
 function setCard(
@@ -1118,11 +1047,6 @@ function setCard(
 // RENDER: TRAFFIC LIST
 // ================================
 function renderTrafficLists(applyFilter = false) {
-  //const reactMode = typeof opts?.onTrafficPageData === "function";
-
-  //if (!reactMode && !dom.trafficItemsContainer) return;
-  //if (!reactMode) dom.trafficItemsContainer.innerHTML = "";
-
   const total = state.traffic.data.length;
   const perPage = CONFIG.pagination.trafficItemsPerPage;
   const totalPages = Math.max(1, Math.ceil(total / perPage));
@@ -1132,66 +1056,15 @@ function renderTrafficLists(applyFilter = false) {
   const endIndex = startIndex + perPage;
   const pageData = state.traffic.data.slice(startIndex, endIndex);
 
-  //const trafficList = document.querySelector(".traffic-list");
-  //const header = trafficList.querySelector(".traffic-header");
-  //const oldItems = trafficList.querySelectorAll(".traffic-item");
-  //oldItems.forEach((item) => item.remove());
-
-  //if (reactMode) {
   opts?.onTrafficPageData?.({
     items: pageData,
     page: state.traffic.page,
     totalPages,
-    //totalItems: total,
   });
-  //updateTrafficPagination(total);
+
   if (applyFilter) setTimeout(addFilterEffect, 0);
   return;
-  //}
-
-  /* pageData.forEach((data) => {
-    const item = document.createElement("div");
-    item.classList.add("traffic-item");
-
-    const jamWidth = (data.jamLevel / 10) * 100;
-
-    item.innerHTML = `
-        <div class="street-info">
-            <div class="street-name">${data.name}</div>
-            <div class="jam-indicator">
-              <div class="jam-bar">
-                <div class="jam-fill ${
-                  data.status
-                }" style="width: ${jamWidth}%"></div>
-              </div>
-              <span class="jam-text">Jam: ${data.jamLevel}/10</span>
-            </div>
-          </div>
-          <div class="traffic-info">
-            <span class="speed">${data.speed} km/h</span>
-            <span class="status-badge status-${data.status}">${capitalizeFirst(
-              data.status,
-            )}</span>
-          </div>
-        `;
-    dom.trafficItemsContainer.appendChild(item);
-  });
-
-  updateTrafficPagination(total);
-  if (applyFilter) addFilterEffect(); */
 }
-
-/* function updateTrafficPagination(totalItems: number) {
-  const perPage = CONFIG.pagination.trafficItemsPerPage;
-  const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
-
-  dom.trafficPagination.currentPage.textContent = String(state.traffic.page);
-  dom.trafficPagination.totalPages.textContent = String(totalPages);
-
-  // 更新按鈕狀態
-  dom.trafficPagination.prevBtn.disabled = state.traffic.page === 1;
-  dom.trafficPagination.nextBtn.disabled = state.traffic.page === totalPages;
-} */
 
 function addFilterEffect() {
   const trafficItems = document.querySelectorAll(".traffic-item");
@@ -1258,14 +1131,9 @@ function refreshIncidentTypeOptions() {
 }
 
 function renderIncidentsLists() {
-  //if (!dom.incidentItemsContainer) return;
-  //dom.incidentItemsContainer.innerHTML = "";
-
   const validIncidents = getFilteredIncidents();
-  // Update badge
-  //if (dom.incidentCountBadge) {
-  //dom.incidentCountBadge.textContent = `${validIncidents.length}`;
-  //}
+
+  opts?.onIncidentsCountChange?.(validIncidents.length);
 
   const total = validIncidents.length;
   const perPage = CONFIG.pagination.incidentItemsPerPage;
@@ -1279,45 +1147,8 @@ function renderIncidentsLists() {
     items: pageData,
     page: state.incidents.page,
     totalPages,
-    //totalItems: total,
   });
-
-  //const incidentSection = document.querySelector(".incidents-section");
-  //const oldItems = incidentSection.querySelectorAll(".incident-item");
-  //oldItems.forEach((item) => item.remove());
-
-  /* pageData.forEach((data) => {
-    //if (data.severity === "Unknown") return;
-    const item = document.createElement("div");
-    item.classList.add("incident-item", `incident-${data.severity}`);
-
-    item.innerHTML = `
-        <div class="incident-icon">${data.icon}</div>
-          <div class="incident-details">
-            <div class="incident-type">${data.type}</div>
-            <div class="incident-location">
-              ${data.location}
-            </div>
-            <div class="incident-time">${data.time} • ${data.delay}</div>
-          </div>
-          `;
-    dom.incidentItemsContainer.appendChild(item);
-  });
-
-  updateIncidentPagination(total); */
 }
-
-/* function updateIncidentPagination(totalItems: number) {
-  const perPage = CONFIG.pagination.incidentItemsPerPage;
-  const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
-
-  dom.incidentPagination.currentPage.textContent = String(state.incidents.page);
-  dom.incidentPagination.totalPages.textContent = String(totalPages);
-
-  // 更新按鈕狀態
-  dom.incidentPagination.prevBtn.disabled = state.incidents.page === 1;
-  dom.incidentPagination.nextBtn.disabled = state.incidents.page === totalPages;
-} */
 
 // ================================
 // DATA LOAD
@@ -1390,8 +1221,7 @@ async function initializeDashboard({ flashFilter = false } = {}) {
   // Draw traffic flow on the map using raw flow segments
   updateTrafficMap(state.traffic.raw);
   sortTrafficData(state.sort);
-  //updateWeatherWidget();
-  emitWeatherToReact();
+  updateWeatherWidget();
   updateMetricsCards();
   updateSpeedTrendChart();
   updateCongestionChart();
@@ -1495,83 +1325,7 @@ function setupEventListeners() {
     updateMetricsCards();
   };
   on(dom.incidentRoadSearch, "input", incidentRoadHandler);
-
-  //setupTrafficPagination();
-  setupIncidentPagination();
 }
-
-/* function setupTrafficPagination() {
-  const prev = dom.trafficPagination.prevBtn;
-  const next = dom.trafficPagination.nextBtn;
-
-  const prevHandler = () => {
-    if (state.traffic.page > 1) {
-      state.traffic.page--;
-      renderTrafficLists();
-    }
-  };
-  const nextHandler = () => {
-    const totalPages = Math.ceil(
-      state.traffic.data.length / CONFIG.pagination.trafficItemsPerPage,
-    );
-    if (state.traffic.page < totalPages) {
-      state.traffic.page++;
-      renderTrafficLists();
-    }
-  };
-
-  on(prev, "click", prevHandler);
-  on(next, "click", nextHandler);
-} */
-
-function setupIncidentPagination() {
-  const prev = dom.incidentPagination.prevBtn;
-  const next = dom.incidentPagination.nextBtn;
-
-  const prevHandler = () => {
-    if (state.incidents.page > 1) {
-      state.incidents.page--;
-      renderIncidentsLists();
-    }
-  };
-
-  const nextHandler = () => {
-    const totalPages = Math.ceil(
-      getFilteredIncidents().length / CONFIG.pagination.incidentItemsPerPage,
-    );
-    if (state.incidents.page < totalPages) {
-      state.incidents.page++;
-      renderIncidentsLists();
-    }
-  };
-
-  on(prev, "click", prevHandler);
-  on(next, "click", nextHandler);
-}
-// ================================
-// BOOTSTRAP
-// ================================
-/*
-function updateTrafficData(trafficData) {
-  trafficData.forEach((data) => {
-    let randomChange = (Math.random() - 0.5) * 3; // Random change between -1.5 and +1.5
-    data.jamLevel = Math.round(
-      Math.min(10, Math.max(0, data.jamLevel + randomChange))
-    );
-
-    if (data.jamLevel < 4) {
-      data.status = "good";
-      data.speed = Math.min(60, data.speed + 5); // Increase speed
-    } else if (data.jamLevel < 7) {
-      data.status = "moderate";
-      data.speed = Math.max(20, data.speed - 5); // Decrease speed
-    } else {
-      data.status = "heavy";
-      data.speed = Math.max(10, data.speed - 10); // Decrease speed more
-    }
-  });
-}
-*/
 
 let __bootstrapped = false;
 

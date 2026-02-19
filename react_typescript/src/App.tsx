@@ -4,11 +4,17 @@ import {
   bootstrapTrafficDashboard,
   type DashboardHandle,
 } from "./legacy/index";
-import { IncidentListItem, TrafficListItem, WeatherData } from "./legacy/types";
+import {
+  IncidentListItem,
+  MetricsPayload,
+  TrafficListItem,
+  WeatherData,
+} from "./legacy/types";
 import TrafficItems from "./components/TrafficItems";
 import IncidentItems from "./components/IncidentItems";
 import Pagination from "./components/Pagination";
 import WeatherWidget from "./components/WeatherWidget";
+import Metrics from "./components/Metrics";
 
 /**
  * Day 1 goal:
@@ -22,7 +28,8 @@ export default function App() {
   // use Ref to hold the dashboard handle across renders (permanent storage)
   // don't use state, because we don't need to re-render when it changes
   const dashRef = useRef<DashboardHandle | null>(null); // initialize with null
-  const [progress, setProgress] = useState(0);
+  //const [progress, setProgress] = useState(0);
+  const [incidentsCount, setIncidentsCount] = useState(0);
 
   const [trafficItems, setTrafficItems] = useState<TrafficListItem[]>([]);
   const [trafficLoading, setTrafficLoading] = useState(true);
@@ -37,13 +44,21 @@ export default function App() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
 
+  const [metricsData, setMetricsData] = useState<MetricsPayload | null>(null);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+
   // 元件第一次 render 完後跑一次, 之後不會因為 state 改變重跑
   useEffect(() => {
     let alive = true;
 
-    const onProgressChange = (v: number) => {
+    /* const onProgressChange = (v: number) => {
       if (!alive) return;
       setProgress(v);
+    }; */
+
+    const onIncidentsCountChange = (count: number) => {
+      if (!alive) return;
+      setIncidentsCount(count);
     };
 
     // 接收端（App） 決定「我用 payload 裡哪些欄位」
@@ -88,13 +103,21 @@ export default function App() {
       setWeatherLoading(false);
     };
 
+    const onMetricsData = (data: MetricsPayload) => {
+      if (!alive) return;
+      setMetricsData(data);
+      setMetricsLoading(false);
+    };
+
     // Run after the first render so all #id and .class elements exist.
     // ① effect：做事（訂閱、請求、操作 DOM、啟動東西）
     bootstrapTrafficDashboard({
-      onProgressChange,
+      //onProgressChange,
       onTrafficPageData,
       onIncidentPageData,
+      onIncidentsCountChange,
       onWeatherData,
+      onMetricsData,
     })
       .then((handle) => {
         // handle is { centerMap, destroy }
@@ -182,82 +205,7 @@ export default function App() {
       <div className="container">
         {/*Metrics Grid*/}
         <div className="metrics-grid">
-          <div className="metric-top" data-metric="avgSpeed">
-            <div className="metric-card">
-              <h3>Average Speed</h3>
-              <span className="metric-icon">🚗</span>
-            </div>
-            <div className="value-row">
-              <div className="value">
-                -- <span className="unit">km/h</span>
-              </div>
-              <div className="metric-trend"></div>
-            </div>
-            <div className="metric-sub">--</div>
-            <div className="metric-sub footer">--</div>
-          </div>
-
-          <div className="metric-top" data-metric="commuteTime">
-            <div className="metric-card">
-              <h3>Avg Commute Time</h3>
-              <span className="metric-icon">⏱️</span>
-            </div>
-            <div className="value-row">
-              <div className="value">
-                -- <span className="unit">min</span>
-              </div>
-              <div className="metric-trend"></div>
-            </div>
-            <div className="metric-sub">--</div>
-            <div className="metric-sub footer">--</div>
-          </div>
-
-          <div className="metric-top" data-metric="congestedRoads">
-            <div className="metric-card">
-              <h3>Congested Roads</h3>
-              <span className="metric-icon">🚧</span>
-            </div>
-            <div className="value-row">
-              <div className="value">--</div>
-              <div className="metric-trend"></div>
-            </div>
-            <div className="metric-sub">--</div>
-            <div className="metric-sub footer">--</div>
-          </div>
-
-          <div className="metric-top" data-metric="activeIncidents">
-            <div className="metric-card">
-              <h3>Active Incidents</h3>
-              <span className="metric-icon">🚨</span>
-            </div>
-            <div className="value-row">
-              <div className="value">--</div>
-              <div className="metric-trend"></div>
-            </div>
-            <div className="metric-sub">--</div>
-            <div className="metric-sub footer">--</div>
-          </div>
-
-          <div className="metric-top" data-metric="healthScore">
-            <div className="metric-card">
-              <h3>Traffic Health</h3>
-              <span className="metric-icon">💚</span>
-            </div>
-            <div className="value-row">
-              <div className="value">
-                -- <span className="unit">/ 100</span>
-              </div>
-              <div className="metric-trend"></div>
-            </div>
-            <div className="metric-progress">
-              <span
-                className="metric-progress-fill good"
-                style={{ width: `${progress}%` }}
-              ></span>
-            </div>
-            <div className="metric-sub">--</div>
-            <div className="metric-sub footer">--</div>
-          </div>
+          <Metrics data={metricsData} isLoading={metricsLoading} />
         </div>
 
         {/*Map Section*/}
@@ -356,7 +304,7 @@ export default function App() {
             <div className="incidents-title">
               <h2>Active Incidents</h2>
               <span className="count-badge" id="incidentCountBadge">
-                --
+                {incidentsCount}
               </span>
             </div>
             <div className="incident-controls">

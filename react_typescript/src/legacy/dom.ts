@@ -2,13 +2,6 @@
 // DOM(Document Object Model) CACHE
 // ================================
 
-type PaginationDom = {
-  prevBtn: HTMLButtonElement;
-  nextBtn: HTMLButtonElement;
-  currentPage: HTMLSpanElement;
-  totalPages: HTMLSpanElement;
-};
-
 export type DomCache = {
   loadingOverlay: HTMLDivElement;
   container: HTMLDivElement;
@@ -21,19 +14,11 @@ export type DomCache = {
   autoUpdateBtn: HTMLButtonElement;
   autoUpdateBtnIcon: HTMLSpanElement;
   autoUpdateBtnText: HTMLSpanElement;
-  /*   // weather
-  weatherWidget: HTMLDivElement;
-  weatherWidgetTemp: HTMLDivElement;
-  weatherWidgetTime: HTMLDivElement;
-  weatherWidgetIcon: HTMLDivElement;
-  weatherWidgetDescription: HTMLDivElement; */
+
   // map
   mapEl: HTMLDivElement;
   centerMapBtn: HTMLButtonElement;
-  // metrics
-  metricCards: NodeListOf<HTMLDivElement>;
-  healthCard: HTMLDivElement;
-  healthCardBar: HTMLSpanElement;
+
   // charts
   speedTrendCanvas: HTMLCanvasElement;
   congestionCanvas: HTMLCanvasElement;
@@ -41,13 +26,12 @@ export type DomCache = {
   sortDropdown: HTMLSelectElement;
   filterBtn: HTMLButtonElement;
   trafficItemsContainer: HTMLDivElement;
-  trafficPagination: PaginationDom;
+
   // incidents
   incidentTypeFilter: HTMLSelectElement;
   incidentRoadSearch: HTMLInputElement;
   incidentCountBadge: HTMLSpanElement;
   incidentItemsContainer: HTMLDivElement;
-  incidentPagination: PaginationDom;
 };
 
 function requiredById<T extends HTMLElement>(
@@ -109,29 +93,6 @@ export function cacheDom() {
     HTMLSpanElement,
   )!;
 
-  /* // weather
-  dom.weatherWidget = requiredById("weatherWidget", HTMLDivElement);
-  dom.weatherWidgetTemp = requiredChild(
-    dom.weatherWidget,
-    ".weather-temp",
-    HTMLDivElement,
-  )!;
-  dom.weatherWidgetTime = requiredChild(
-    dom.weatherWidget,
-    ".weather-time",
-    HTMLDivElement,
-  )!;
-  dom.weatherWidgetIcon = requiredChild(
-    dom.weatherWidget,
-    ".weather-icon",
-    HTMLDivElement,
-  )!;
-  dom.weatherWidgetDescription = requiredChild(
-    dom.weatherWidget,
-    ".weather-desc",
-    HTMLDivElement,
-  )!; */
-
   // map
   dom.mapEl = requiredById("map", HTMLDivElement);
   dom.centerMapBtn = requiredById("centerMapBtn", HTMLButtonElement);
@@ -140,18 +101,6 @@ export function cacheDom() {
   dom.speedTrendCanvas = requiredById("speedTrendChart", HTMLCanvasElement);
   dom.congestionCanvas = requiredById("congestionChart", HTMLCanvasElement);
 
-  // metrics
-  dom.metricCards = document.querySelectorAll<HTMLDivElement>(".metric-top");
-  dom.healthCard = requiredQuery(
-    '.metric-top[data-metric="healthScore"]',
-    HTMLDivElement,
-  );
-  dom.healthCardBar = requiredChild(
-    dom.healthCard,
-    ".metric-progress > span",
-    HTMLSpanElement,
-  );
-
   // traffic
   dom.sortDropdown = requiredById("sort-dropdown", HTMLSelectElement);
   dom.filterBtn = requiredQuery(".filter-btn", HTMLButtonElement);
@@ -159,12 +108,6 @@ export function cacheDom() {
     ".traffic-items-container",
     HTMLDivElement,
   );
-  dom.trafficPagination = {
-    prevBtn: requiredById("trafficPrevPage", HTMLButtonElement),
-    nextBtn: requiredById("trafficNextPage", HTMLButtonElement),
-    currentPage: requiredById("trafficCurrentPage", HTMLSpanElement),
-    totalPages: requiredById("trafficTotalPages", HTMLSpanElement),
-  };
 
   // incidents
   dom.incidentTypeFilter = requiredById(
@@ -177,11 +120,4 @@ export function cacheDom() {
     ".incident-items-container",
     HTMLDivElement,
   );
-  // incidents
-  dom.incidentPagination = {
-    prevBtn: requiredById("incidentPrevPage", HTMLButtonElement),
-    nextBtn: requiredById("incidentNextPage", HTMLButtonElement),
-    currentPage: requiredById("incidentCurrentPage", HTMLSpanElement),
-    totalPages: requiredById("incidentTotalPages", HTMLSpanElement),
-  };
 }

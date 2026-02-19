@@ -118,3 +118,22 @@ export type WeatherData = {
   dt: number;
   timezone: string;
 };
+
+export type MetricTrend = {
+  text: string;
+  dir: "up" | "down";
+};
+
+export type MetricsPayload = {
+  // null means "no data yet" (e.g. initial load)
+  avgSpeed: number | null; // km/h
+  commuteTime: number | null; // min
+  congestedRoads: number | null;
+  activeIncidentsFiltered: number | null;
+  activeIncidentsTotal: number | null;
+  avgJam: number | null; // 0..10
+  healthScore: number | null; // 0..100
+  updatedAt: string | null; // already formatted time string
+  jamThreshold: number; // threshold used for congestedRoads
+  trend: MetricTrend | null; // trend vs previous refresh
+};

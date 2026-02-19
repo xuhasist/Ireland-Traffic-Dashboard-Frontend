@@ -11,8 +11,8 @@ export default function IncidentItems({ items, isLoading }: Props) {
   }
   return (
     <>
-      {items.map((item) => (
-        <div className="incident-item">
+      {items.map((item, index) => (
+        <div className="incident-item" key={index}>
           <div className="incident-icon">{item.icon}</div>
           <div className="incident-details">
             <div className="incident-type">{item.type}</div>
