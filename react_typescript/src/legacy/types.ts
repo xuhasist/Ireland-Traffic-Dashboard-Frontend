@@ -137,3 +137,16 @@ export type MetricsPayload = {
   jamThreshold: number; // threshold used for congestedRoads
   trend: MetricTrend | null; // trend vs previous refresh
 };
+
+export type ChartsPayload = {
+  speedTrend: {
+    labels: string[];
+    data: number[];
+    yMax: number;
+  };
+  congestion: {
+    good: number;
+    moderate: number;
+    heavy: number;
+  };
+};

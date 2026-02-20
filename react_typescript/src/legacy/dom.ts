@@ -20,18 +20,18 @@ export type DomCache = {
   centerMapBtn: HTMLButtonElement;
 
   // charts
-  speedTrendCanvas: HTMLCanvasElement;
-  congestionCanvas: HTMLCanvasElement;
+  //speedTrendCanvas: HTMLCanvasElement;
+  //congestionCanvas: HTMLCanvasElement;
   // traffic
   sortDropdown: HTMLSelectElement;
   filterBtn: HTMLButtonElement;
-  trafficItemsContainer: HTMLDivElement;
+  //trafficItemsContainer: HTMLDivElement;
 
   // incidents
   incidentTypeFilter: HTMLSelectElement;
   incidentRoadSearch: HTMLInputElement;
   incidentCountBadge: HTMLSpanElement;
-  incidentItemsContainer: HTMLDivElement;
+  //incidentItemsContainer: HTMLDivElement;
 };
 
 function requiredById<T extends HTMLElement>(
@@ -98,16 +98,16 @@ export function cacheDom() {
   dom.centerMapBtn = requiredById("centerMapBtn", HTMLButtonElement);
 
   // charts
-  dom.speedTrendCanvas = requiredById("speedTrendChart", HTMLCanvasElement);
-  dom.congestionCanvas = requiredById("congestionChart", HTMLCanvasElement);
+  //dom.speedTrendCanvas = requiredById("speedTrendChart", HTMLCanvasElement);
+  //dom.congestionCanvas = requiredById("congestionChart", HTMLCanvasElement);
 
   // traffic
   dom.sortDropdown = requiredById("sort-dropdown", HTMLSelectElement);
   dom.filterBtn = requiredQuery(".filter-btn", HTMLButtonElement);
-  dom.trafficItemsContainer = requiredQuery(
+  /* dom.trafficItemsContainer = requiredQuery(
     ".traffic-items-container",
     HTMLDivElement,
-  );
+  ); */
 
   // incidents
   dom.incidentTypeFilter = requiredById(
@@ -116,8 +116,8 @@ export function cacheDom() {
   );
   dom.incidentRoadSearch = requiredById("incidentRoadSearch", HTMLInputElement);
   dom.incidentCountBadge = requiredById("incidentCountBadge", HTMLSpanElement);
-  dom.incidentItemsContainer = requiredQuery(
+  /* dom.incidentItemsContainer = requiredQuery(
     ".incident-items-container",
     HTMLDivElement,
-  );
+  ); */
 }

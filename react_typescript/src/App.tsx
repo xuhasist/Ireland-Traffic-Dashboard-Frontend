@@ -5,6 +5,7 @@ import {
   type DashboardHandle,
 } from "./legacy/index";
 import {
+  ChartsPayload,
   IncidentListItem,
   MetricsPayload,
   TrafficListItem,
@@ -15,6 +16,7 @@ import IncidentItems from "./components/IncidentItems";
 import Pagination from "./components/Pagination";
 import WeatherWidget from "./components/WeatherWidget";
 import Metrics from "./components/Metrics";
+import Charts from "./components/Charts";
 
 /**
  * Day 1 goal:
@@ -29,23 +31,27 @@ export default function App() {
   // don't use state, because we don't need to re-render when it changes
   const dashRef = useRef<DashboardHandle | null>(null); // initialize with null
   //const [progress, setProgress] = useState(0);
-  const [incidentsCount, setIncidentsCount] = useState(0);
-
-  const [trafficItems, setTrafficItems] = useState<TrafficListItem[]>([]);
-  const [trafficLoading, setTrafficLoading] = useState(true);
-  const [trafficPage, setTrafficPage] = useState(1);
-  const [trafficTotalPages, setTrafficTotalPages] = useState(1);
-
-  const [incidentItems, setIncidentItems] = useState<IncidentListItem[]>([]);
-  const [incidentLoading, setIncidentLoading] = useState(true);
-  const [incidentPage, setIncidentPage] = useState(1);
-  const [incidentTotalPages, setIncidentTotalPages] = useState(1);
 
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
 
   const [metricsData, setMetricsData] = useState<MetricsPayload | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
+
+  const [chartsData, setChartsData] = useState<ChartsPayload | null>(null);
+  const [chartsLoading, setChartsLoading] = useState(true);
+
+  const [trafficItems, setTrafficItems] = useState<TrafficListItem[]>([]);
+  const [trafficLoading, setTrafficLoading] = useState(true);
+  const [trafficPage, setTrafficPage] = useState(1);
+  const [trafficTotalPages, setTrafficTotalPages] = useState(1);
+
+  const [incidentsCount, setIncidentsCount] = useState(0);
+
+  const [incidentItems, setIncidentItems] = useState<IncidentListItem[]>([]);
+  const [incidentLoading, setIncidentLoading] = useState(true);
+  const [incidentPage, setIncidentPage] = useState(1);
+  const [incidentTotalPages, setIncidentTotalPages] = useState(1);
 
   // 元件第一次 render 完後跑一次, 之後不會因為 state 改變重跑
   useEffect(() => {
@@ -56,9 +62,22 @@ export default function App() {
       setProgress(v);
     }; */
 
-    const onIncidentsCountChange = (count: number) => {
+    const onWeatherData = (data: WeatherData) => {
       if (!alive) return;
-      setIncidentsCount(count);
+      setWeatherData(data);
+      setWeatherLoading(false);
+    };
+
+    const onMetricsData = (data: MetricsPayload) => {
+      if (!alive) return;
+      setMetricsData(data);
+      setMetricsLoading(false);
+    };
+
+    const onChartsData = (data: ChartsPayload) => {
+      if (!alive) return;
+      setChartsData(data);
+      setChartsLoading(false);
     };
 
     // 接收端（App） 決定「我用 payload 裡哪些欄位」
@@ -80,6 +99,11 @@ export default function App() {
       setTrafficLoading(false);
     };
 
+    const onIncidentsCountChange = (count: number) => {
+      if (!alive) return;
+      setIncidentsCount(count);
+    };
+
     const onIncidentPageData = ({
       items,
       page,
@@ -97,27 +121,16 @@ export default function App() {
       setIncidentLoading(false);
     };
 
-    const onWeatherData = (data: WeatherData) => {
-      if (!alive) return;
-      setWeatherData(data);
-      setWeatherLoading(false);
-    };
-
-    const onMetricsData = (data: MetricsPayload) => {
-      if (!alive) return;
-      setMetricsData(data);
-      setMetricsLoading(false);
-    };
-
     // Run after the first render so all #id and .class elements exist.
     // ① effect：做事（訂閱、請求、操作 DOM、啟動東西）
     bootstrapTrafficDashboard({
       //onProgressChange,
-      onTrafficPageData,
-      onIncidentPageData,
-      onIncidentsCountChange,
       onWeatherData,
       onMetricsData,
+      onChartsData,
+      onIncidentPageData,
+      onIncidentsCountChange,
+      onTrafficPageData,
     })
       .then((handle) => {
         // handle is { centerMap, destroy }
@@ -243,28 +256,7 @@ export default function App() {
         </div>
 
         {/*Charts Grid*/}
-        <div className="charts-grid">
-          <div className="chart-card chart-large">
-            <div className="section-header">
-              <h2>Traffic Speed Trend (24 Hours)</h2>
-              <div className="chart-legend-inline">
-                <span
-                  className="legend-dot"
-                  style={{ background: "#3b82f6" }}
-                ></span>
-                <span>Average Speed</span>
-              </div>
-            </div>
-            <canvas id="speedTrendChart"></canvas>
-          </div>
-
-          <div className="chart-card">
-            <div className="section-header">
-              <h2>Congestion Distribution</h2>
-            </div>
-            <canvas id="congestionChart"></canvas>
-          </div>
-        </div>
+        <Charts data={chartsData} isLoading={chartsLoading} />
 
         {/*Traffic List*/}
         <div className="traffic-list">
@@ -282,11 +274,9 @@ export default function App() {
               </button>
             </div>
           </div>
-
           <div className="traffic-items-container">
             <TrafficItems items={trafficItems} isLoading={trafficLoading} />
           </div>
-
           <Pagination
             kind="traffic"
             page={trafficPage}
@@ -321,11 +311,9 @@ export default function App() {
               />
             </div>
           </div>
-
           <div className="incident-items-container">
             <IncidentItems items={incidentItems} isLoading={incidentLoading} />
           </div>
-
           <Pagination
             kind="incident"
             page={incidentPage}

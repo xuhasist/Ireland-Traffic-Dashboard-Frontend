@@ -9,7 +9,6 @@ import type {
   WeatherData,
   IncidentListItem,
 } from "./types.js";
-import { Chart } from "chart.js";
 
 // ================================
 // APP STATE
@@ -42,8 +41,15 @@ export type DashboardState = {
   };
   weather: WeatherData | null;
   charts: {
-    speedTrend: Chart<"line", number[], string> | null;
-    congestion: Chart<"doughnut", number[], string> | null;
+    speedTrend: {
+      labels: string[];
+      data: number[];
+    };
+    congestion: {
+      good: number;
+      moderate: number;
+      heavy: number;
+    };
   };
 };
 
@@ -73,7 +79,14 @@ export const state = {
   },
   weather: null,
   charts: {
-    speedTrend: null,
-    congestion: null,
+    speedTrend: {
+      labels: [],
+      data: [],
+    },
+    congestion: {
+      good: 0,
+      moderate: 0,
+      heavy: 0,
+    },
   },
 } as DashboardState;

@@ -5,6 +5,7 @@ import { state } from "./state.js";
 import { dom, cacheDom } from "./dom.js";
 import {
   BBox,
+  ChartsPayload,
   CityConfig,
   DashboardHandle,
   IncidentDetails,
@@ -104,11 +105,13 @@ function setCity(cityKey: string) {
   state.metrics.prevAvgSpeed = null;
 
   // Reset charts series
-  if (state.charts.speedTrend) {
-    state.charts.speedTrend.data.labels = [];
-    state.charts.speedTrend.data.datasets[0].data = [];
-    state.charts.speedTrend.update("none");
-  }
+
+  state.charts.speedTrend.labels = [];
+  state.charts.speedTrend.data = [];
+  state.charts.congestion.good = 0;
+  state.charts.congestion.moderate = 0;
+  state.charts.congestion.heavy = 0;
+
   // Recenter map
   centerMap();
 }
@@ -711,128 +714,27 @@ function updateTrafficMap(flowResults: TrafficStandardFormat[]) {
   });
 }
 
-// ========================================
-// CHART FUNCTIONS
-// ========================================
-function initializeCharts() {
-  // Speed Trend Chart
-  if (dom.speedTrendCanvas) {
-    Chart.getChart(dom.speedTrendCanvas)?.destroy();
-    // use Chart.js to create line chart
-    state.charts.speedTrend = new Chart(dom.speedTrendCanvas, {
-      type: "line",
-      data: {
-        // content of the chart
-        labels: [], // x-axis labels (time)
-        datasets: [
-          // one line one dataset, only one line here
-          {
-            label: "Average Speed (km/h)",
-            data: [], // y-axis data points
-            borderColor: "#3b82f6", // line color
-            backgroundColor: "rgba(59, 130, 246, 0.1)", // fill color under the line
-            tension: 0.4,
-            fill: true, // fill area under the line
-            pointRadius: 4,
-            pointHoverRadius: 6, // 滑鼠移過時放大點的半徑
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            // 滑鼠提示
-            mode: "index",
-            intersect: false,
-            backgroundColor: "rgba(0, 0, 0, 0.8)",
-            padding: 12,
-            titleFont: { size: 14, weight: "bold" },
-            bodyFont: { size: 13 },
-          },
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: CONFIG.charts.speedTrendYMax, // e.g., 60 km/h
-            ticks: {
-              // y軸刻度
-              callback: (value) => `${value} km/h`,
-            },
-            grid: {
-              // light grid lines
-              color: "rgba(0, 0, 0, 0.05)",
-            },
-          },
-          x: {
-            grid: {
-              display: false,
-            },
-          },
-        },
-      },
-    });
-  }
+function updateCharts() {
+  if (!state.traffic.data.length) return;
+  //console.log("!!!state.traffic.data.length:", state.traffic.data.length);
 
-  // Congestion Distribution Chart
-  if (dom.congestionCanvas) {
-    Chart.getChart(dom.congestionCanvas)?.destroy();
-    state.charts.congestion = new Chart(dom.congestionCanvas, {
-      type: "doughnut",
-      data: {
-        labels: ["Good", "Moderate", "Heavy"],
-        datasets: [
-          {
-            data: [0, 0, 0],
-            backgroundColor: ["#22c55e", "#eab308", "#ef4444"],
-            borderWidth: 0,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: "bottom",
-            labels: {
-              padding: 15,
-              font: { size: 12 },
-            },
-          },
-        },
-      },
-    });
-  }
-}
-
-function updateSpeedTrendChart() {
-  const chart = state.charts.speedTrend;
-  if (!chart || !state.traffic.data.length) return;
-
-  const now = new Date();
+  //const now = new Date();
   const timeLabel = formatTimeWithSeconds(CONFIG.timeZone); // get current time label
 
   const avgSpeed =
     state.traffic.data.reduce((sum, d) => sum + d.speed, 0) /
     state.traffic.data.length;
 
-  chart.data.labels?.push(timeLabel);
-  chart.data.datasets[0].data.push(Number(avgSpeed.toFixed(1)));
+  state.charts.speedTrend.labels?.push(timeLabel);
+  state.charts.speedTrend.data?.push(Number(avgSpeed.toFixed(1)));
 
-  if (chart.data.labels?.length ?? 0 > CONFIG.charts.speedTrendMaxPoints) {
-    chart.data.labels?.shift();
-    chart.data.datasets[0].data.shift();
+  if (
+    (state.charts.speedTrend.labels?.length ?? 0) >
+    CONFIG.charts.speedTrendMaxPoints
+  ) {
+    state.charts.speedTrend.labels?.shift();
+    state.charts.speedTrend.data?.shift();
   }
-
-  chart.update("none"); // 'none' to prevent animation
-}
-
-function updateCongestionChart() {
-  const chart = state.charts.congestion;
-  if (!chart) return;
 
   const good = state.traffic.data.filter(
     (d) => d.jamLevel < CONFIG.thresholds.goodMax,
@@ -845,8 +747,27 @@ function updateCongestionChart() {
   const heavy = state.traffic.data.filter(
     (d) => d.jamLevel >= CONFIG.thresholds.moderateMax,
   ).length;
-  chart.data.datasets[0].data = [good, moderate, heavy];
-  chart.update("none");
+  state.charts.congestion.good = good;
+  state.charts.congestion.moderate = moderate;
+  state.charts.congestion.heavy = heavy;
+
+  /* console.log(
+    "state.charts.speedTrend.labels:",
+    state.charts.speedTrend.labels.length,
+  ); */
+
+  opts?.onChartsData?.({
+    speedTrend: {
+      labels: [...state.charts.speedTrend.labels],
+      data: [...state.charts.speedTrend.data],
+      yMax: CONFIG.charts.speedTrendYMax,
+    },
+    congestion: {
+      good: state.charts.congestion.good,
+      moderate: state.charts.congestion.moderate,
+      heavy: state.charts.congestion.heavy,
+    },
+  });
 }
 
 // ================================
@@ -915,20 +836,21 @@ function sortTrafficData(sortBy: SortOption) {
 // caller decides what payload to pass in
 type Options = {
   //onProgressChange: (v: number) => void;
+  onWeatherData?: (data: WeatherData) => void;
+  onMetricsData?: (data: MetricsPayload) => void;
+  onChartsData?: (data: ChartsPayload) => void;
   onTrafficPageData?: (payload: {
     items: TrafficListItem[];
     page: number;
     totalPages: number;
     //totalItems: number;
   }) => void;
+  onIncidentsCountChange?: (count: number) => void;
   onIncidentPageData?: (payload: {
     items: IncidentListItem[];
     page: number;
     totalPages: number;
   }) => void;
-  onIncidentsCountChange?: (count: number) => void;
-  onWeatherData?: (data: WeatherData) => void;
-  onMetricsData?: (data: MetricsPayload) => void;
 };
 
 let opts: Options | null = null;
@@ -1156,6 +1078,15 @@ function renderIncidentsLists() {
 async function loadDashboardData() {
   // load traffic, incidents, weather data
 
+  /* console.log(
+    "dataMode:",
+    state.dataMode,
+    "city:",
+    state.cityKey,
+    "roads:",
+    getCityConfig().roads?.length,
+  ); */
+
   const city = getCityConfig();
 
   // Promise.all: run independent network calls in parallel to reduce total wait time.
@@ -1202,11 +1133,15 @@ async function loadDashboardData() {
   ]);
   state.weather = weather;
 
+  //console.log("trafficFlow results:", trafficFlow?.results?.length);
+
   // Transform
   //state.traffic.data = (trafficFlow?.results ?? []).map(toTrafficListItem);
   state.traffic.raw = trafficFlow?.results ?? [];
   state.traffic.data = state.traffic.raw.map(toTrafficListItem);
   state.incidents.data = (incidents?.results ?? []).map(toIncidentListItem);
+
+  //console.log("state.traffic.data.length:", state.traffic.data.length);
 
   refreshIncidentTypeOptions();
 }
@@ -1215,7 +1150,7 @@ async function loadDashboardData() {
 // DASHBOARD UPDATE PIPELINE
 // ================================
 async function initializeDashboard({ flashFilter = false } = {}) {
-  console.log("Initializing dashboard data:", new Date().toLocaleString());
+  //console.log("Initializing dashboard data:", new Date().toLocaleString());
   // avoid no parameter error
   await loadDashboardData();
   // Draw traffic flow on the map using raw flow segments
@@ -1223,8 +1158,7 @@ async function initializeDashboard({ flashFilter = false } = {}) {
   sortTrafficData(state.sort);
   updateWeatherWidget();
   updateMetricsCards();
-  updateSpeedTrendChart();
-  updateCongestionChart();
+  updateCharts();
   renderTrafficLists(flashFilter);
   renderIncidentsLists();
 }
@@ -1374,7 +1308,7 @@ export async function bootstrapTrafficDashboard(
     showLoading();
     setupEventListeners();
     initializeMap();
-    initializeCharts();
+    //initializeCharts();
     await initializeDashboard();
     //dom.container?.classList.add("loaded");
     startAutoUpdate();
@@ -1390,14 +1324,11 @@ export async function bootstrapTrafficDashboard(
         removeAllListeners();
       } catch {}
       // Destroy charts
-      try {
-        state.charts?.speedTrend?.destroy?.();
-      } catch {}
-      try {
-        state.charts?.congestion?.destroy?.();
-      } catch {}
-      state.charts.speedTrend = null;
-      state.charts.congestion = null;
+      state.charts.speedTrend.labels = [];
+      state.charts.speedTrend.data = [];
+      state.charts.congestion.good = 0;
+      state.charts.congestion.moderate = 0;
+      state.charts.congestion.heavy = 0;
       // Destroy map
       try {
         state.map?.remove?.();
