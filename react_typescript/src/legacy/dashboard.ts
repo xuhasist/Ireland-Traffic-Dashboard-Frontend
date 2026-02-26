@@ -630,6 +630,43 @@ function nextIncidentPage() {
   setIncidentPage(state.incidents.page + 1);
 }
 
+function sortTrafficData(sortBy: SortOption) {
+  const list = state.traffic.data;
+
+  if (sortBy === "worst") {
+    list.sort((a, b) => b.jamLevel - a.jamLevel);
+  } else if (sortBy === "best") {
+    list.sort((a, b) => a.jamLevel - b.jamLevel);
+  } else if (sortBy === "alphabetical") {
+    list.sort((a, b) => a.name.localeCompare(b.name));
+  }
+}
+
+export function trafficSortHandler(sortBy: SortOption) {
+  //state.traffic.page = 1;
+  //const sortBy = dom.sortDropdown.value as SortOption;
+  const applyFilter = sortBy === state.sort;
+
+  sortTrafficData(sortBy);
+  renderTrafficLists(applyFilter);
+
+  state.sort = sortBy;
+}
+
+export function incidentRoadHandler(query: string) {
+  state.incidents.filters.roadQuery = query; //dom.incidentRoadSearch.value;
+  state.incidents.page = 1;
+  renderIncidentsLists();
+  updateMetricsCards();
+}
+
+export function incidentTypeHandler(type: string) {
+  state.incidents.filters.type = type;
+  state.incidents.page = 1;
+  renderIncidentsLists();
+  updateMetricsCards();
+}
+
 // ========================================
 // MAP: TRAFFIC FLOW RENDERING
 // ========================================
@@ -815,21 +852,6 @@ function toIncidentListItem(
 }
 
 // ================================
-// SORTING
-// ================================
-function sortTrafficData(sortBy: SortOption) {
-  const list = state.traffic.data;
-
-  if (sortBy === "worst") {
-    list.sort((a, b) => b.jamLevel - a.jamLevel);
-  } else if (sortBy === "best") {
-    list.sort((a, b) => a.jamLevel - b.jamLevel);
-  } else if (sortBy === "alphabetical") {
-    list.sort((a, b) => a.name.localeCompare(b.name));
-  }
-}
-
-// ================================
 // RENDER: METRICS
 // ================================
 // 呼叫端（dashboard/legacy） 決定「會傳什麼 payload」
@@ -845,6 +867,7 @@ type Options = {
     totalPages: number;
     //totalItems: number;
   }) => void;
+  //onTrafficSortChange?: (sortBy: SortOption) => void;
   onIncidentsCountChange?: (count: number) => void;
   onIncidentPageData?: (payload: {
     items: IncidentListItem[];
@@ -1020,7 +1043,7 @@ function getFilteredIncidents() {
   return list;
 }
 
-function refreshIncidentTypeOptions() {
+/* function refreshIncidentTypeOptions() {
   // Goal: populate(填入) incident type filter dropdown based on current data
 
   if (!dom.incidentTypeFilter) return;
@@ -1050,7 +1073,7 @@ function refreshIncidentTypeOptions() {
   const stillValid = current === "all" || uniqueTypes.includes(current);
   state.incidents.filters.type = stillValid ? current : "all";
   dom.incidentTypeFilter.value = state.incidents.filters.type;
-}
+} */
 
 function renderIncidentsLists() {
   const validIncidents = getFilteredIncidents();
@@ -1143,7 +1166,7 @@ async function loadDashboardData() {
 
   //console.log("state.traffic.data.length:", state.traffic.data.length);
 
-  refreshIncidentTypeOptions();
+  //refreshIncidentTypeOptions();
 }
 
 // ================================
@@ -1231,7 +1254,7 @@ function setupEventListeners() {
   on(dom.autoUpdateBtn, "click", autoUpdateHandler);
 
   // Traffic sort
-  const trafficSortHandler = () => {
+  /*   const trafficSortHandler = () => {
     state.traffic.page = 1;
     const sortBy = dom.sortDropdown.value as SortOption;
     const applyFilter = sortBy === state.sort;
@@ -1241,24 +1264,24 @@ function setupEventListeners() {
 
     state.sort = sortBy;
   };
-  on(dom.filterBtn, "click", trafficSortHandler);
+  on(dom.filterBtn, "click", trafficSortHandler); */
 
   // Incident filters
-  const incidentTypeHandler = () => {
+  /* const incidentTypeHandler = () => {
     state.incidents.filters.type = dom.incidentTypeFilter.value;
     state.incidents.page = 1;
     renderIncidentsLists();
     updateMetricsCards();
   };
-  on(dom.incidentTypeFilter, "change", incidentTypeHandler);
+  on(dom.incidentTypeFilter, "change", incidentTypeHandler); */
 
-  const incidentRoadHandler = () => {
+  /* const incidentRoadHandler = () => {
     state.incidents.filters.roadQuery = dom.incidentRoadSearch.value;
     state.incidents.page = 1;
     renderIncidentsLists();
     updateMetricsCards();
   };
-  on(dom.incidentRoadSearch, "input", incidentRoadHandler);
+  on(dom.incidentRoadSearch, "input", incidentRoadHandler); */
 }
 
 let __bootstrapped = false;
@@ -1347,6 +1370,7 @@ export async function bootstrapTrafficDashboard(
       //setTrafficPage,
       prevIncidentPage,
       nextIncidentPage,
+      //trafficSortHandler,
     };
     return __handle;
   } catch (err) {

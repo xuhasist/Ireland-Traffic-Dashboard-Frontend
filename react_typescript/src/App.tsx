@@ -12,11 +12,14 @@ import {
   WeatherData,
 } from "./legacy/types";
 import TrafficItems from "./components/TrafficItems";
+import TrafficFilter from "./components/TrafficFilter";
 import IncidentItems from "./components/IncidentItems";
+import IncidentFilter from "./components/IncidentFilter";
 import Pagination from "./components/Pagination";
 import WeatherWidget from "./components/WeatherWidget";
 import Metrics from "./components/Metrics";
 import Charts from "./components/Charts";
+import { state } from "./legacy/state";
 
 /**
  * Day 1 goal:
@@ -49,6 +52,7 @@ export default function App() {
   const [incidentsCount, setIncidentsCount] = useState(0);
 
   const [incidentItems, setIncidentItems] = useState<IncidentListItem[]>([]);
+  const [incidentAll, setIncidentAll] = useState<IncidentListItem[]>([]);
   const [incidentLoading, setIncidentLoading] = useState(true);
   const [incidentPage, setIncidentPage] = useState(1);
   const [incidentTotalPages, setIncidentTotalPages] = useState(1);
@@ -116,6 +120,7 @@ export default function App() {
       if (!alive) return;
       // 之後的畫面更新靠這兩行，讓 React 重新 render
       setIncidentItems(items);
+      setIncidentAll((state.incidents.data ?? []) as IncidentListItem[]);
       setIncidentPage(page);
       setIncidentTotalPages(totalPages);
       setIncidentLoading(false);
@@ -263,15 +268,7 @@ export default function App() {
           <div className="traffic-header">
             <h2>Live Traffic Status</h2>
             <div className="traffic-controls">
-              <select id="sort-dropdown" className="sort-dropdown">
-                <option value="worst">Worst First</option>
-                <option value="best">Best First</option>
-                <option value="alphabetical">A-Z</option>
-              </select>
-              <button className="filter-btn">
-                <span className="filter-icon">🔍</span>
-                Sort
-              </button>
+              <TrafficFilter />
             </div>
           </div>
           <div className="traffic-items-container">
@@ -298,17 +295,7 @@ export default function App() {
               </span>
             </div>
             <div className="incident-controls">
-              <select
-                id="incidentTypeFilter"
-                className="sort-dropdown"
-              ></select>
-              <input
-                id="incidentRoadSearch"
-                className="text-input"
-                type="text"
-                placeholder="Search road name…"
-                aria-label="Search incident road name"
-              />
+              <IncidentFilter incidents={incidentAll} />
             </div>
           </div>
           <div className="incident-items-container">
