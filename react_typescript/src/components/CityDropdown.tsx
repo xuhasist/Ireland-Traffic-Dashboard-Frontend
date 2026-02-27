@@ -6,11 +6,9 @@ type Props = {
 };
 
 export default function CityDropdown({ currentCity }: Props) {
-  if (!currentCity) return;
+  if (!currentCity) return null;
+
   const cities = Object.keys(CONFIG.cities);
-  /* if (currentCity === "" && cities.length > 0) {
-    cityChangeHandler(cities[0]);
-  } */
 
   return (
     <>
@@ -22,9 +20,9 @@ export default function CityDropdown({ currentCity }: Props) {
         value={currentCity}
         onChange={(e) => cityChangeHandler(e.target.value)}
       >
-        {cities.map((c) => (
-          <option key={c} value={c}>
-            {c}
+        {cities.map((city) => (
+          <option key={city} value={city}>
+            {city}
           </option>
         ))}
       </select>

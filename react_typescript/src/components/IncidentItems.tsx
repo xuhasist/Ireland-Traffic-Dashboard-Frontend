@@ -6,9 +6,10 @@ type Props = {
 };
 
 export default function IncidentItems({ items, isLoading }: Props) {
-  if (isLoading || !items || items.length === 0) {
+  if (isLoading || items.length === 0) {
     return null;
   }
+
   return (
     <>
       {items.map((item, index) => (

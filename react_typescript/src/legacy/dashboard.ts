@@ -17,7 +17,6 @@ import {
   TrafficStatus,
   WeatherData,
 } from "./types.js";
-import { on, removeAllListeners } from "./listeners.js";
 
 let __handle: DashboardHandle | null = null;
 
@@ -26,11 +25,6 @@ let __handle: DashboardHandle | null = null;
 // ================================
 const clamp = (n: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, n)); // limit n between min and max
-
-function capitalizeFirst(s: string): string {
-  if (!s) return ""; // all falsy values: false, 0, "", null, undefined, NaN
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
 
 function minutesAgoToText(minutesAgo: number): string {
   // check minutesAgo is a number
@@ -66,7 +60,7 @@ function formatTimeWithSeconds(timeZone: string): string {
 // ================================
 // RENDER: METRICS
 // ================================
-// 呼叫端（dashboard/legacy） 決定「會傳什麼 payload」
+// 呼叫端（dashboard/legacy）決定「會傳什麼 payload」
 // caller decides what payload to pass in
 type Options = {
   //onProgressChange: (v: number) => void;
@@ -88,6 +82,7 @@ type Options = {
   onIncidentsCountChange?: (count: number) => void;
   onIncidentPageData?: (payload: {
     items: IncidentListItem[];
+    allItems: IncidentListItem[];
     page: number;
     totalPages: number;
   }) => void;
@@ -112,18 +107,17 @@ function setCity(cityKey: string) {
   // next time user opens the app, it will load the last selected city
   localStorage.setItem("traffic_dashboard_city", cityKey);
 
-  // Update navbar title + center button tooltip
+  // Update navbar title
   const cityName = cityKey;
   if (!opts?.onNavbarTitle) return;
   opts.onNavbarTitle(`🚦 ${cityName} Traffic Dashboard`);
 
-  // Reset paging + chart history
+  // Reset paging
   state.traffic.page = 1;
   state.incidents.page = 1;
   state.metrics.prevAvgSpeed = null;
 
   // Reset charts series
-
   state.charts.speedTrend.labels = [];
   state.charts.speedTrend.data = [];
   state.charts.congestion.good = 0;
@@ -141,18 +135,12 @@ function setDataMode(mode: string): void {
 }
 
 function syncUIFromState() {
-  // City dropdown
-  //if (dom.cityDropdown) dom.cityDropdown.value = state.cityKey;
-  //if (opts?.onCityChange) opts.onCityChange(state.cityKey);
-
   setLiveUpdate(state.dataMode === "live");
 }
 
 function setLiveUpdate(isLive: boolean) {
   if (opts?.onLiveUpdateChange) opts.onLiveUpdateChange(isLive);
 }
-
-function setCityHandler(cityKey: string) {}
 
 // ================================
 // MOCK DATA GENERATORS
@@ -972,43 +960,6 @@ function updateMetricsCards() {
   });
 }
 
-function setCard(
-  metricKey: string,
-  {
-    valueHtml,
-    subText,
-    footer,
-    trend,
-  }: {
-    valueHtml: string;
-    subText: string | null;
-    footer: string | null;
-    trend: { text: string; dir: string } | null;
-  },
-) {
-  const card = document.querySelector(
-    `.metric-top[data-metric="${metricKey}"]`,
-  );
-  if (!card) return;
-  const valueEl = card.querySelector(".value");
-  const subEl = card.querySelector(".metric-sub");
-  const footerEl = card.querySelector(".metric-sub.footer");
-  const trendEl = card.querySelector(".metric-trend");
-  if (valueEl) valueEl.innerHTML = valueHtml;
-  if (subEl) subEl.textContent = subText ?? "";
-  if (footerEl) footerEl.textContent = footer ?? "";
-  if (trendEl) {
-    if (!trend) {
-      trendEl.textContent = "";
-      trendEl.classList.remove("up", "down");
-    } else {
-      trendEl.textContent = trend.text;
-      trendEl.classList.toggle("up", trend.dir === "up");
-      trendEl.classList.toggle("down", trend.dir === "down");
-    }
-  }
-}
-
 // ================================
 // RENDER: TRAFFIC LIST
 // ================================
@@ -1079,6 +1030,7 @@ function renderIncidentsLists() {
 
   opts?.onIncidentPageData?.({
     items: pageData,
+    allItems: state.incidents.data,
     page: state.incidents.page,
     totalPages,
   });
@@ -1261,11 +1213,7 @@ export async function bootstrapTrafficDashboard(
       try {
         stopAutoUpdate();
       } catch {}
-      // Remove all DOM listeners we registered
-      try {
-        removeAllListeners();
-      } catch {}
-      // Destroy charts
+
       state.charts.speedTrend.labels = [];
       state.charts.speedTrend.data = [];
       state.charts.congestion.good = 0;
@@ -1275,8 +1223,8 @@ export async function bootstrapTrafficDashboard(
       try {
         state.map?.remove?.();
       } catch {}
+
       state.map = null;
-      // Reset handle so a remount can bootstrap again
       __handle = null;
       __bootstrapped = false;
     };

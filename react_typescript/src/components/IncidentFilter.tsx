@@ -4,57 +4,56 @@ import { incidentRoadHandler, incidentTypeHandler } from "../legacy/dashboard";
 type Incident = {
   severity: string | null;
   type: string | null;
-  // 其他欄位不用寫也沒關係（先最小化）
-};
-
-type IncidentFilters = {
-  type: string; // "all" 或某個 type
 };
 
 type Props = {
   incidents: Incident[];
-  //filters: IncidentFilters;
-  //setFilters: React.Dispatch<React.SetStateAction<IncidentFilters>>;
 };
 
 export default function IncidentFilter({ incidents }: Props) {
-  const [filters, setFilters] = useState({ type: "all" });
+  const [selectedType, setSelectedType] = useState("all");
 
   // 只有 incidents 變了才重新算，不然沿用舊的 uniqueTypes，不會觸發 re-render
-  const uniqueTypes = useMemo((): string[] => {
-    //console.log("Calculating unique incident types from incidents:", incidents);
-    const base = (incidents ?? []).filter((d) => d.severity !== "Unknown");
-    return Array.from(
-      new Set(base.map((d) => d.type).filter(Boolean)),
-    ) as string[];
-  }, [incidents]);
+  const uniqueTypes = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (incidents ?? [])
+            .filter((incident) => incident.severity !== "Unknown")
+            .map((incident) => incident.type)
+            .filter((type): type is string => Boolean(type)),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [incidents],
+  );
 
   // dependency 改變 → React 會在「那次 render 完成後」重新執行這個 effect
   useEffect(() => {
-    //console.log("Available incident types changed:", uniqueTypes);
-    const current = filters.type ?? "all";
-    const stillValid = current === "all" || uniqueTypes.includes(current);
+    const stillValid =
+      selectedType === "all" || uniqueTypes.includes(selectedType);
+
     if (!stillValid) {
-      setFilters({ type: "all" });
+      setSelectedType("all");
+      incidentTypeHandler("all");
     }
-  }, [uniqueTypes, filters.type, setFilters]);
+  }, [selectedType, uniqueTypes]);
 
   return (
     <>
       <select
         id="incidentTypeFilter"
         className="sort-dropdown"
-        value={filters.type ?? "all"}
+        value={selectedType}
         onChange={(e) => {
-          const next = e.target.value;
-          setFilters({ type: next });
-          incidentTypeHandler(next);
+          const nextType = e.target.value;
+          setSelectedType(nextType);
+          incidentTypeHandler(nextType);
         }}
       >
         <option value="all">All types</option>
-        {uniqueTypes.map((t) => (
-          <option key={t} value={t}>
-            {t}
+        {uniqueTypes.map((type) => (
+          <option key={type} value={type}>
+            {type}
           </option>
         ))}
       </select>

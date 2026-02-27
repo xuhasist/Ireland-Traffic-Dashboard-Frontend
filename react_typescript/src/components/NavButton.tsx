@@ -7,7 +7,7 @@ type Props = {
 export default function NavButton({ isAutoUpdate }: Props) {
   return (
     <>
-      <button className="btn" onClick={() => refreshHandler()}>
+      <button className="btn" onClick={refreshHandler}>
         <span className="icon">🔄</span>
         <span className="text">Refresh</span>
       </button>

@@ -6,16 +6,6 @@ type Props = {
   isLoading?: boolean;
 };
 
-function formatTimeWithSeconds(timeZone: string): string {
-  return new Date().toLocaleTimeString("en-GB", {
-    timeZone: timeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  });
-}
-
 function healthBand(score: number): "good" | "moderate" | "heavy" {
   if (score >= 70) return "good";
   if (score >= 40) return "moderate";
@@ -23,35 +13,27 @@ function healthBand(score: number): "good" | "moderate" | "heavy" {
 }
 
 export default function Metrics({ data, isLoading }: Props) {
-  const loaded = !isLoading && data != null;
-  if (!loaded) return null; // Metrics are now rendered via direct DOM manipulation, so this component doesn't render anything itself.
+  if (isLoading || !data) return null;
 
-  const updatedAt = formatTimeWithSeconds(CONFIG.timeZone);
-  const footer = `Updated ${updatedAt}`;
-
-  const avgSpeed =
-    data?.avgSpeed != null ? `${data.avgSpeed.toFixed(0)}` : "--";
-
-  const trend = data?.trend;
-  const trendText = trend ? trend.text : "";
-  const trendDir = trend ? trend.dir : null;
-
+  const footer = data.updatedAt
+    ? `Updated ${data.updatedAt}`
+    : "Updated --:--:--";
+  const avgSpeed = data.avgSpeed != null ? data.avgSpeed.toFixed(0) : "--";
   const avgTravelTime =
-    data?.commuteTime != null ? `${data.commuteTime.toFixed(0)}` : "--";
+    data.commuteTime != null ? data.commuteTime.toFixed(0) : "--";
   const congestedRoads =
-    data?.congestedRoads != null ? `${data.congestedRoads}` : "--";
+    data.congestedRoads != null ? `${data.congestedRoads}` : "--";
   const activeIncidentsFiltered =
-    data?.activeIncidentsFiltered != null
+    data.activeIncidentsFiltered != null
       ? `${data.activeIncidentsFiltered}`
       : "--";
   const activeIncidents =
-    data?.activeIncidentsTotal != null ? `${data.activeIncidentsTotal}` : "--";
+    data.activeIncidentsTotal != null ? `${data.activeIncidentsTotal}` : "--";
   const healthScore =
-    data?.healthScore != null ? `${data.healthScore.toFixed(0)}` : "--";
-  const avgJam = data?.avgJam != null ? `${data.avgJam.toFixed(1)}` : "--";
-  const progress = data?.healthScore != null ? data.healthScore : 0;
-
-  const band = healthBand(data?.healthScore != null ? data.healthScore : 0);
+    data.healthScore != null ? data.healthScore.toFixed(0) : "--";
+  const avgJam = data.avgJam != null ? data.avgJam.toFixed(1) : "--";
+  const progress = data.healthScore ?? 0;
+  const band = healthBand(progress);
 
   return (
     <>
@@ -64,7 +46,9 @@ export default function Metrics({ data, isLoading }: Props) {
           <div className="value">
             {avgSpeed} <span className="unit">km/h</span>
           </div>
-          <div className={`metric-trend ${trendDir}`}>{trendText}</div>
+          <div className={`metric-trend ${data.trend?.dir ?? ""}`}>
+            {data.trend?.text ?? ""}
+          </div>
         </div>
         <div className="metric-sub"></div>
         <div className="metric-sub footer">{footer}</div>
@@ -80,7 +64,9 @@ export default function Metrics({ data, isLoading }: Props) {
           </div>
           <div className="metric-trend"></div>
         </div>
-        <div className="metric-sub">{`Based on ${congestedRoads} congested road(s)`}</div>
+        <div className="metric-sub">
+          Based on {congestedRoads} congested road(s)
+        </div>
         <div className="metric-sub footer">{footer}</div>
       </div>
       <div className="metric-top" data-metric="congestedRoads">
@@ -92,7 +78,9 @@ export default function Metrics({ data, isLoading }: Props) {
           <div className="value">{congestedRoads}</div>
           <div className="metric-trend"></div>
         </div>
-        <div className="metric-sub">{`Jam ≥ ${CONFIG.thresholds.moderateMax}/10`}</div>
+        <div className="metric-sub">
+          Jam ≥ {CONFIG.thresholds.moderateMax}/10
+        </div>
         <div className="metric-sub footer">{footer}</div>
       </div>
       <div className="metric-top" data-metric="activeIncidents">
@@ -107,7 +95,7 @@ export default function Metrics({ data, isLoading }: Props) {
           </div>
           <div className="metric-trend"></div>
         </div>
-        <div className="metric-sub">{`Filtered by type/road`}</div>
+        <div className="metric-sub">Filtered by type/road</div>
         <div className="metric-sub footer">{footer}</div>
       </div>
       <div className="metric-top" data-metric="healthScore">
@@ -127,9 +115,9 @@ export default function Metrics({ data, isLoading }: Props) {
             style={{ width: `${progress}%` }}
           ></span>
         </div>
-        <div className="metric-sub">{`Avg Jam ${avgJam}/10`}</div>
+        <div className="metric-sub">Avg Jam {avgJam}/10</div>
         <div className="metric-sub footer">{footer}</div>
-      </div>{" "}
+      </div>
     </>
   );
 }

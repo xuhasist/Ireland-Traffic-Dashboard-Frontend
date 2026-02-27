@@ -1,5 +1,5 @@
 // src/App.tsx 回傳 JSX 元素插進 #root, 就是 React 產生的 UI(DOM) 結構
-import { useEffect, useRef, useState } from "react"; // React hook
+import { useEffect, useRef, useState } from "react";
 import {
   bootstrapTrafficDashboard,
   type DashboardHandle,
@@ -19,32 +19,20 @@ import Pagination from "./components/Pagination";
 import WeatherWidget from "./components/WeatherWidget";
 import Metrics from "./components/Metrics";
 import Charts from "./components/Charts";
-import { state } from "./legacy/state";
 import MapButton from "./components/MapButton";
 import NavButton from "./components/NavButton";
 import NavToggle from "./components/NavToggle";
 import CityDropdown from "./components/CityDropdown";
 
-/**
- * Day 1 goal:
- * - React renders the SAME HTML structure you had in index.html.
- * - Then we run your existing dashboard logic (ported into TS) which updates the DOM.
- *
- * This "hybrid" approach is very common when migrating a real-world project:
- * you make it work first, then refactor feature-by-feature into React state.
- */
 export default function App() {
   // use Ref to hold the dashboard handle across renders (permanent storage)
   // don't use state, because we don't need to re-render when it changes
-  const dashRef = useRef<DashboardHandle | null>(null); // initialize with null
-  //const [progress, setProgress] = useState(0);
+  const dashRef = useRef<DashboardHandle | null>(null);
 
   const [isLoaded, setIsLoaded] = useState(true);
   const [isAutoUpdate, setIsAutoUpdate] = useState(true);
   const [isLiveUpdate, setIsLiveUpdate] = useState(false);
-
   const [currentCity, setCurrentCity] = useState<string | null>(null);
-
   const [navbarTitle, setNavbarTitle] = useState("🚦 Traffic Dashboard");
 
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
@@ -62,7 +50,6 @@ export default function App() {
   const [trafficTotalPages, setTrafficTotalPages] = useState(1);
 
   const [incidentsCount, setIncidentsCount] = useState(0);
-
   const [incidentItems, setIncidentItems] = useState<IncidentListItem[]>([]);
   const [incidentAll, setIncidentAll] = useState<IncidentListItem[]>([]);
   const [incidentLoading, setIncidentLoading] = useState(true);
@@ -73,114 +60,68 @@ export default function App() {
   useEffect(() => {
     let alive = true;
 
-    /* const onProgressChange = (v: number) => {
-      if (!alive) return;
-      setProgress(v);
-    }; */
-
-    const onLoadedChange = (isLoaded: boolean) => {
-      if (!alive) return;
-      setIsLoaded(isLoaded);
-    };
-
-    const onAutoUpdateChange = (isAuto: boolean) => {
-      if (!alive) return;
-      setIsAutoUpdate(isAuto);
-    };
-
-    const onLiveUpdateChange = (isLive: boolean) => {
-      if (!alive) return;
-      setIsLiveUpdate(isLive);
-    };
-
-    const onNavbarTitle = (title: string) => {
-      if (!alive) return;
-      setNavbarTitle(title);
-    };
-
-    const onCityChange = (city: string) => {
-      if (!alive) return;
-      setCurrentCity(city);
-    };
-
-    const onWeatherData = (data: WeatherData) => {
-      if (!alive) return;
-      setWeatherData(data);
-      setWeatherLoading(false);
-    };
-
-    const onMetricsData = (data: MetricsPayload) => {
-      if (!alive) return;
-      setMetricsData(data);
-      setMetricsLoading(false);
-    };
-
-    const onChartsData = (data: ChartsPayload) => {
-      if (!alive) return;
-      setChartsData(data);
-      setChartsLoading(false);
-    };
-
-    // 接收端（App） 決定「我用 payload 裡哪些欄位」
-    // receiver decides what fields in the payload to use
-    const onTrafficPageData = ({
-      items,
-      page,
-      totalPages,
-    }: {
-      items: TrafficListItem[];
-      page: number;
-      totalPages: number;
-    }) => {
-      if (!alive) return;
-      // 之後的畫面更新靠這兩行，讓 React 重新 render
-      setTrafficItems(items);
-      setTrafficPage(page);
-      setTrafficTotalPages(totalPages);
-      setTrafficLoading(false);
-    };
-
-    const onIncidentsCountChange = (count: number) => {
-      if (!alive) return;
-      setIncidentsCount(count);
-    };
-
-    const onIncidentPageData = ({
-      items,
-      page,
-      totalPages,
-    }: {
-      items: IncidentListItem[];
-      page: number;
-      totalPages: number;
-    }) => {
-      if (!alive) return;
-      // 之後的畫面更新靠這兩行，讓 React 重新 render
-      setIncidentItems(items);
-      setIncidentAll((state.incidents.data ?? []) as IncidentListItem[]);
-      setIncidentPage(page);
-      setIncidentTotalPages(totalPages);
-      setIncidentLoading(false);
-    };
-
     // Run after the first render so all #id and .class elements exist.
     // ① effect：做事（訂閱、請求、操作 DOM、啟動東西）
     bootstrapTrafficDashboard({
-      //onProgressChange,
-      onLoadedChange,
-      onAutoUpdateChange,
-      onLiveUpdateChange,
-      onNavbarTitle,
-      onCityChange,
-      onWeatherData,
-      onMetricsData,
-      onChartsData,
-      onIncidentPageData,
-      onIncidentsCountChange,
-      onTrafficPageData,
+      // 接收端（App）決定「我用 payload 裡哪些欄位」
+      // receiver decides what fields in the payload to use
+      onLoadedChange: (loaded) => {
+        if (!alive) return;
+        // 之後的畫面更新靠這行，讓 React 重新 render
+        setIsLoaded(loaded);
+      },
+      onAutoUpdateChange: (isAuto) => {
+        if (!alive) return;
+        setIsAutoUpdate(isAuto);
+      },
+      onLiveUpdateChange: (isLive) => {
+        if (!alive) return;
+        setIsLiveUpdate(isLive);
+      },
+      onNavbarTitle: (title) => {
+        if (!alive) return;
+        setNavbarTitle(title);
+      },
+      onCityChange: (city) => {
+        if (!alive) return;
+        setCurrentCity(city);
+      },
+      onWeatherData: (data) => {
+        if (!alive) return;
+        setWeatherData(data);
+        setWeatherLoading(false);
+      },
+      onMetricsData: (data) => {
+        if (!alive) return;
+        setMetricsData(data);
+        setMetricsLoading(false);
+      },
+      onChartsData: (data) => {
+        if (!alive) return;
+        setChartsData(data);
+        setChartsLoading(false);
+      },
+      onTrafficPageData: ({ items, page, totalPages }) => {
+        if (!alive) return;
+        setTrafficItems(items);
+        setTrafficPage(page);
+        setTrafficTotalPages(totalPages);
+        setTrafficLoading(false);
+      },
+      onIncidentsCountChange: (count) => {
+        if (!alive) return;
+        setIncidentsCount(count);
+      },
+      onIncidentPageData: ({ items, allItems, page, totalPages }) => {
+        if (!alive) return;
+        setIncidentItems(items);
+        setIncidentAll(allItems);
+        setIncidentPage(page);
+        setIncidentTotalPages(totalPages);
+        setIncidentLoading(false);
+      },
     })
       .then((handle) => {
-        // handle is { centerMap, destroy }
         if (!alive) {
           handle.destroy();
           return;
@@ -188,7 +129,6 @@ export default function App() {
         dashRef.current = handle;
       })
       .catch((err) => {
-        // eslint-disable-next-line no-console
         console.error("bootstrapTrafficDashboard failed:", err);
       });
 
@@ -230,14 +170,6 @@ export default function App() {
       </nav>
 
       {/*Main Container*/}
-      {/*
-            NOTE:
-            Your original CSS sets `.container { opacity: 0 }` and only shows it
-            after JS adds `.loaded`.
-            If the legacy bootstrap crashes, the container stays invisible and
-            the page *looks* blank.
-            We pre-add `loaded` so you always see the skeleton.
-          */}
       <div className={`container ${isLoaded ? " loaded" : ""}`}>
         {/*Metrics Grid*/}
         <div className="metrics-grid">
@@ -292,7 +224,6 @@ export default function App() {
             onNext={() => dashRef.current?.nextTrafficPage()}
           />
         </div>
-        {/*traffic-list end*/}
 
         {/*Incidents Section*/}
         <div className="incidents-section">
@@ -319,7 +250,6 @@ export default function App() {
             onNext={() => dashRef.current?.nextIncidentPage()}
           />
         </div>
-        {/*incidents-section end*/}
       </div>
     </>
   );
