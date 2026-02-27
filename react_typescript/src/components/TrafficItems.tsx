@@ -6,7 +6,7 @@ type Props = {
 };
 
 function capitalizeFirst(s: string): string {
-  if (!s) return "";
+  if (!s) return ""; // all falsy values: false, 0, "", null, undefined, NaN
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
@@ -17,11 +17,11 @@ export default function TrafficItems({ items, isLoading }: Props) {
 
   return (
     <>
-      {items.map((item) => {
+      {items.map((item, index) => {
         const jamWidth = (item.jamLevel / 10) * 100;
 
         return (
-          <div className="traffic-item" key={item.name}>
+          <div className="traffic-item" key={index}>
             <div className="street-info">
               <div className="street-name">{item.name}</div>
               <div className="jam-indicator">

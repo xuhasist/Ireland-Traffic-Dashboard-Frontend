@@ -4,7 +4,7 @@ import { trafficSortHandler } from "../legacy/dashboard";
 type SortOption = "worst" | "best" | "alphabetical";
 
 export default function TrafficFilter() {
-  const [selectedSort, setSelectedSort] = useState<SortOption>("worst");
+  const [selectedSort, setSelectedSort] = useState<SortOption>("worst"); // dropdown目前選到
 
   return (
     <>
