@@ -1,8 +1,6 @@
 import L from "leaflet";
-import Chart from "chart.js/auto";
 import { CONFIG } from "./config.js";
 import { state } from "./state.js";
-import { dom, cacheDom } from "./dom.js";
 import {
   BBox,
   ChartsPayload,
@@ -48,23 +46,11 @@ function jamToStatus(jamFactor: number): TrafficStatus {
   return "heavy";
 }
 
-function updateAutoUpdateButton(isRunning: boolean): void {
-  if (!dom.autoUpdateBtn) return; // check button exists
-  dom.autoUpdateBtnIcon.textContent = isRunning ? "⏸️" : "▶️";
-  dom.autoUpdateBtnText.textContent = isRunning
-    ? "Stop Auto-Update"
-    : "Start Auto-Update";
-}
-
 function showLoading() {
-  dom.container.classList.remove("loaded");
-  //dom.weatherWidget.classList.remove("loaded");
-  dom.loadingOverlay?.classList.add("active");
+  if (opts?.onLoadedChange) opts.onLoadedChange(false);
 }
 function hideLoading() {
-  dom.loadingOverlay?.classList.remove("active");
-  dom.container.classList.add("loaded");
-  //dom.weatherWidget.classList.add("loaded");
+  if (opts?.onLoadedChange) opts.onLoadedChange(true);
 }
 
 function formatTimeWithSeconds(timeZone: string): string {
@@ -78,6 +64,38 @@ function formatTimeWithSeconds(timeZone: string): string {
 }
 
 // ================================
+// RENDER: METRICS
+// ================================
+// 呼叫端（dashboard/legacy） 決定「會傳什麼 payload」
+// caller decides what payload to pass in
+type Options = {
+  //onProgressChange: (v: number) => void;
+  onLoadedChange?: (isLoaded: boolean) => void;
+  onAutoUpdateChange?: (isRunning: boolean) => void;
+  onLiveUpdateChange?: (isLive: boolean) => void;
+  onNavbarTitle?: (title: string) => void;
+  onCityChange?: (cityKey: string) => void;
+  onWeatherData?: (data: WeatherData) => void;
+  onMetricsData?: (data: MetricsPayload) => void;
+  onChartsData?: (data: ChartsPayload) => void;
+  onTrafficPageData?: (payload: {
+    items: TrafficListItem[];
+    page: number;
+    totalPages: number;
+    //totalItems: number;
+  }) => void;
+  //onTrafficSortChange?: (sortBy: SortOption) => void;
+  onIncidentsCountChange?: (count: number) => void;
+  onIncidentPageData?: (payload: {
+    items: IncidentListItem[];
+    page: number;
+    totalPages: number;
+  }) => void;
+};
+
+let opts: Options | null = null;
+
+// ================================
 // CITY & DATA MODE HELPERS
 // ================================
 function getCityConfig(): CityConfig {
@@ -88,6 +106,7 @@ function getCityConfig(): CityConfig {
 function setCity(cityKey: string) {
   if (!CONFIG.cities[cityKey]) return; // city not found
   state.cityKey = cityKey;
+  if (opts?.onCityChange) opts.onCityChange(state.cityKey);
 
   // persist selection
   // next time user opens the app, it will load the last selected city
@@ -95,9 +114,8 @@ function setCity(cityKey: string) {
 
   // Update navbar title + center button tooltip
   const cityName = cityKey;
-  if (dom.navbarTitle)
-    dom.navbarTitle.textContent = `🚦 ${cityName} Traffic Dashboard`;
-  if (dom.centerMapBtn) dom.centerMapBtn.title = `Center on ${cityName}`;
+  if (!opts?.onNavbarTitle) return;
+  opts.onNavbarTitle(`🚦 ${cityName} Traffic Dashboard`);
 
   // Reset paging + chart history
   state.traffic.page = 1;
@@ -118,29 +136,23 @@ function setCity(cityKey: string) {
 
 function setDataMode(mode: string): void {
   state.dataMode = mode === "live" ? "live" : "mock";
+  setLiveUpdate(state.dataMode === "live");
   localStorage.setItem("traffic_dashboard_dataMode", state.dataMode);
-  if (dom.dataModeLabel) {
-    dom.dataModeLabel.textContent = "Live Data";
-    //state.dataMode === "live" ? "Live API" : "Mock Data";
-  }
 }
 
 function syncUIFromState() {
   // City dropdown
-  if (dom.cityDropdown) dom.cityDropdown.value = state.cityKey;
+  //if (dom.cityDropdown) dom.cityDropdown.value = state.cityKey;
+  //if (opts?.onCityChange) opts.onCityChange(state.cityKey);
 
-  // Data mode toggle (checked = live)
-  if (dom.dataModeToggle)
-    // checkbox
-    dom.dataModeToggle.checked = state.dataMode === "live";
-
-  // Navbar title + tooltip
-  /*
-  if (dom.navbarTitle)
-    dom.navbarTitle.textContent = `🚦 ${state.cityKey} Traffic Dashboard`;
-  if (dom.centerMapBtn) dom.centerMapBtn.title = `Center on ${state.cityKey}`;
-  */
+  setLiveUpdate(state.dataMode === "live");
 }
+
+function setLiveUpdate(isLive: boolean) {
+  if (opts?.onLiveUpdateChange) opts.onLiveUpdateChange(isLive);
+}
+
+function setCityHandler(cityKey: string) {}
 
 // ================================
 // MOCK DATA GENERATORS
@@ -667,6 +679,34 @@ export function incidentTypeHandler(type: string) {
   updateMetricsCards();
 }
 
+export async function dataModeHandler(isLive: boolean) {
+  showLoading();
+  setDataMode(isLive ? "live" : "mock");
+  await initializeDashboard();
+  hideLoading();
+}
+
+export function autoUpdateHandler(isAutoUpdate: boolean): void {
+  toggleAutoUpdate(isAutoUpdate);
+}
+
+export function updateAutoUpdateButton(isRunning: boolean): void {
+  /* if (!dom.autoUpdateBtn) return; // check button exists
+  dom.autoUpdateBtnIcon.textContent = isRunning ? "⏸️" : "▶️";
+  dom.autoUpdateBtnText.textContent = isRunning
+    ? "Stop Auto-Update"
+    : "Start Auto-Update"; */
+
+  if (opts?.onAutoUpdateChange) opts.onAutoUpdateChange(isRunning);
+}
+
+export async function refreshHandler() {
+  showLoading();
+  centerMap();
+  await initializeDashboard();
+  hideLoading();
+}
+
 // ========================================
 // MAP: TRAFFIC FLOW RENDERING
 // ========================================
@@ -851,32 +891,13 @@ function toIncidentListItem(
   };
 }
 
-// ================================
-// RENDER: METRICS
-// ================================
-// 呼叫端（dashboard/legacy） 決定「會傳什麼 payload」
-// caller decides what payload to pass in
-type Options = {
-  //onProgressChange: (v: number) => void;
-  onWeatherData?: (data: WeatherData) => void;
-  onMetricsData?: (data: MetricsPayload) => void;
-  onChartsData?: (data: ChartsPayload) => void;
-  onTrafficPageData?: (payload: {
-    items: TrafficListItem[];
-    page: number;
-    totalPages: number;
-    //totalItems: number;
-  }) => void;
-  //onTrafficSortChange?: (sortBy: SortOption) => void;
-  onIncidentsCountChange?: (count: number) => void;
-  onIncidentPageData?: (payload: {
-    items: IncidentListItem[];
-    page: number;
-    totalPages: number;
-  }) => void;
-};
-
-let opts: Options | null = null;
+export async function cityChangeHandler(currentCity: string) {
+  showLoading();
+  setCity(currentCity);
+  initializeMap();
+  await initializeDashboard();
+  hideLoading();
+}
 
 function updateMetricsCards() {
   if (!opts?.onMetricsData) return;
@@ -1043,38 +1064,6 @@ function getFilteredIncidents() {
   return list;
 }
 
-/* function refreshIncidentTypeOptions() {
-  // Goal: populate(填入) incident type filter dropdown based on current data
-
-  if (!dom.incidentTypeFilter) return;
-
-  const base = (state.incidents.data ?? []).filter(
-    (d) => d.severity !== "Unknown",
-  );
-  const uniqueTypes = Array.from(
-    new Set(base.map((d) => d.type).filter(Boolean)),
-  ).sort();
-
-  const current = state.incidents.filters.type ?? "all";
-
-  // innerHTML needs string, so we join the array
-  // insert to select element
-  dom.incidentTypeFilter.innerHTML = [
-    '<option value="all">All types</option>',
-    // map 會產生一個新陣列
-    // ... to spread the array into individual elements
-    ...uniqueTypes.map((t) => `<option value="${t}">${t}</option>`),
-  ].join("");
-
-  // Keep selection if still valid
-  // current means the previous selected type
-  // uniqueTypes is the newly generated list of types
-  // 如果我前一次的選擇適用這一次的結果，就續用
-  const stillValid = current === "all" || uniqueTypes.includes(current);
-  state.incidents.filters.type = stillValid ? current : "all";
-  dom.incidentTypeFilter.value = state.incidents.filters.type;
-} */
-
 function renderIncidentsLists() {
   const validIncidents = getFilteredIncidents();
 
@@ -1208,80 +1197,10 @@ function stopAutoUpdate() {
   updateAutoUpdateButton(false);
 }
 
-function toggleAutoUpdate() {
-  const isRunning = Boolean(state.autoUpdateTimer);
+function toggleAutoUpdate(isRunning?: boolean) {
+  //const isRunning = Boolean(state.autoUpdateTimer);
   if (isRunning) stopAutoUpdate();
   else startAutoUpdate();
-}
-
-// ================================
-// EVENTS
-// ================================
-function setupEventListeners() {
-  const refreshHandler = async () => {
-    showLoading();
-    centerMap();
-    await initializeDashboard();
-    hideLoading();
-  };
-
-  // on 用在 EventListener + 集中管理
-  on(dom.refreshBtn, "click", refreshHandler);
-
-  // City selector
-  const cityChangeHandler = async () => {
-    showLoading();
-    setCity(dom.cityDropdown.value);
-    initializeMap();
-    await initializeDashboard();
-    hideLoading();
-  };
-  on(dom.cityDropdown, "change", cityChangeHandler);
-
-  // Live API / Mock switch
-  const dataModeHandler = async () => {
-    showLoading();
-    setDataMode(dom.dataModeToggle.checked ? "live" : "mock");
-    await initializeDashboard();
-    hideLoading();
-  };
-  on(dom.dataModeToggle, "change", dataModeHandler);
-
-  // Auto-update
-  const autoUpdateHandler = () => {
-    toggleAutoUpdate();
-  };
-  on(dom.autoUpdateBtn, "click", autoUpdateHandler);
-
-  // Traffic sort
-  /*   const trafficSortHandler = () => {
-    state.traffic.page = 1;
-    const sortBy = dom.sortDropdown.value as SortOption;
-    const applyFilter = sortBy === state.sort;
-
-    sortTrafficData(sortBy);
-    renderTrafficLists(applyFilter);
-
-    state.sort = sortBy;
-  };
-  on(dom.filterBtn, "click", trafficSortHandler); */
-
-  // Incident filters
-  /* const incidentTypeHandler = () => {
-    state.incidents.filters.type = dom.incidentTypeFilter.value;
-    state.incidents.page = 1;
-    renderIncidentsLists();
-    updateMetricsCards();
-  };
-  on(dom.incidentTypeFilter, "change", incidentTypeHandler); */
-
-  /* const incidentRoadHandler = () => {
-    state.incidents.filters.roadQuery = dom.incidentRoadSearch.value;
-    state.incidents.page = 1;
-    renderIncidentsLists();
-    updateMetricsCards();
-  };
-  on(dom.incidentRoadSearch, "input", incidentRoadHandler); */
 }
 
 let __bootstrapped = false;
@@ -1307,7 +1226,7 @@ export async function bootstrapTrafficDashboard(
     console.log(
       "Traffic Dashboard Script Loaded: " + new Date().toLocaleString(),
     );
-    cacheDom();
+    //cacheDom();
 
     // Load persisted preferences
     const savedCity = localStorage.getItem("traffic_dashboard_city"); // might be null
@@ -1317,19 +1236,19 @@ export async function bootstrapTrafficDashboard(
       state.dataMode = savedMode; // including null check
 
     // Populate city dropdown (in case HTML changes)
-    if (dom.cityDropdown) {
+    /* if (dom.cityDropdown) {
       const keys = Object.keys(CONFIG.cities);
       dom.cityDropdown.innerHTML = keys
         .map((k) => `<option value="${k}">${k}</option>`)
         .join("");
-    }
+    } */
 
     syncUIFromState();
     setDataMode(state.dataMode); // update label
     setCity(state.cityKey); // update title/tooltip + persist
 
     showLoading();
-    setupEventListeners();
+    //setupEventListeners();
     initializeMap();
     //initializeCharts();
     await initializeDashboard();

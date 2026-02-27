@@ -20,6 +20,10 @@ import WeatherWidget from "./components/WeatherWidget";
 import Metrics from "./components/Metrics";
 import Charts from "./components/Charts";
 import { state } from "./legacy/state";
+import MapButton from "./components/MapButton";
+import NavButton from "./components/NavButton";
+import NavToggle from "./components/NavToggle";
+import CityDropdown from "./components/CityDropdown";
 
 /**
  * Day 1 goal:
@@ -34,6 +38,14 @@ export default function App() {
   // don't use state, because we don't need to re-render when it changes
   const dashRef = useRef<DashboardHandle | null>(null); // initialize with null
   //const [progress, setProgress] = useState(0);
+
+  const [isLoaded, setIsLoaded] = useState(true);
+  const [isAutoUpdate, setIsAutoUpdate] = useState(true);
+  const [isLiveUpdate, setIsLiveUpdate] = useState(false);
+
+  const [currentCity, setCurrentCity] = useState<string | null>(null);
+
+  const [navbarTitle, setNavbarTitle] = useState("🚦 Traffic Dashboard");
 
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
@@ -65,6 +77,31 @@ export default function App() {
       if (!alive) return;
       setProgress(v);
     }; */
+
+    const onLoadedChange = (isLoaded: boolean) => {
+      if (!alive) return;
+      setIsLoaded(isLoaded);
+    };
+
+    const onAutoUpdateChange = (isAuto: boolean) => {
+      if (!alive) return;
+      setIsAutoUpdate(isAuto);
+    };
+
+    const onLiveUpdateChange = (isLive: boolean) => {
+      if (!alive) return;
+      setIsLiveUpdate(isLive);
+    };
+
+    const onNavbarTitle = (title: string) => {
+      if (!alive) return;
+      setNavbarTitle(title);
+    };
+
+    const onCityChange = (city: string) => {
+      if (!alive) return;
+      setCurrentCity(city);
+    };
 
     const onWeatherData = (data: WeatherData) => {
       if (!alive) return;
@@ -130,6 +167,11 @@ export default function App() {
     // ① effect：做事（訂閱、請求、操作 DOM、啟動東西）
     bootstrapTrafficDashboard({
       //onProgressChange,
+      onLoadedChange,
+      onAutoUpdateChange,
+      onLiveUpdateChange,
+      onNavbarTitle,
+      onCityChange,
       onWeatherData,
       onMetricsData,
       onChartsData,
@@ -161,52 +203,28 @@ export default function App() {
 
   return (
     <>
-      <div className="loading-overlay">
+      <div className={`loading-overlay ${isLoaded ? "" : "active"}`}>
         <div className="spinner"></div>
         <p>Loading traffic data...</p>
       </div>
 
       <nav className="navbar">
-        <h1>🚦 Traffic Dashboard</h1>
+        <h1>{navbarTitle}</h1>
 
         <div className="navbar-right">
           {/*Weather Widget*/}
           <WeatherWidget data={weatherData} isLoading={weatherLoading} />
 
           <div className="city-selector">
-            <span className="time-label">City:</span>
-            <select className="time-dropdown" id="cityDropdown"></select>
+            <CityDropdown currentCity={currentCity} />
           </div>
 
           <div className="data-toggle">
-            <span className="toggle-label" id="dataModeLabel">
-              Mock Data
-            </span>
-            <label className="switch" title="Toggle Live API / Mock Data">
-              <input type="checkbox" id="dataModeToggle" />
-              <span className="slider"></span>
-            </label>
-          </div>
-
-          <div className="time-selector">
-            <span className="time-label">View:</span>
-            <select className="time-dropdown" id="timeDropdown">
-              <option>Live (Now)</option>
-              <option>1 Hour Ago</option>
-              <option>Today Morning (8 AM)</option>
-              <option>Yesterday</option>
-            </select>
+            <NavToggle isLiveUpdate={isLiveUpdate} />
           </div>
 
           <div className="nav-buttons">
-            <button className="btn">
-              <span className="icon">🔄</span>
-              <span className="text">Refresh</span>
-            </button>
-            <button className="btn btn-primary">
-              <span className="icon">⏸️</span>
-              <span className="text">Stop Auto-Update</span>
-            </button>
+            <NavButton isAutoUpdate={isAutoUpdate} />
           </div>
         </div>
       </nav>
@@ -220,7 +238,7 @@ export default function App() {
             the page *looks* blank.
             We pre-add `loaded` so you always see the skeleton.
           */}
-      <div className="container">
+      <div className={`container ${isLoaded ? " loaded" : ""}`}>
         {/*Metrics Grid*/}
         <div className="metrics-grid">
           <Metrics data={metricsData} isLoading={metricsLoading} />
@@ -231,19 +249,10 @@ export default function App() {
           <div className="section-header">
             <h2>Live Traffic Map</h2>
             <div className="map-controls">
-              <button
-                className="map-btn"
-                id="centerMapBtn"
-                onClick={() => dashRef.current?.centerMap()}
-                title="Center"
-              >
-                <span>📍</span>
-              </button>
+              <MapButton onCenterMap={() => dashRef.current?.centerMap()} />
             </div>
           </div>
-          <div id="map" className="map-container">
-            {/*<div className="map-placeholder">🗺️ Interactive Map (Coming Soon)</div>*/}
-          </div>
+          <div id="map" className="map-container"></div>
           <div className="map-legend">
             <div className="legend-item">
               <span className="legend-color good"></span>
