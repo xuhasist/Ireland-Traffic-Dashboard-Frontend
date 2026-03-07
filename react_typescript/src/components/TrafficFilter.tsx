@@ -1,4 +1,4 @@
-type SortOption = "worst" | "best" | "alphabetical";
+import type { SortOption } from "../types";
 
 type Props = {
   selectedSort: SortOption;

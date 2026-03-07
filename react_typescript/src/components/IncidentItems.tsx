@@ -1,4 +1,4 @@
-import type { IncidentListItem } from "../legacy/types";
+import type { IncidentListItem } from "../types";
 
 type Props = {
   items: IncidentListItem[];

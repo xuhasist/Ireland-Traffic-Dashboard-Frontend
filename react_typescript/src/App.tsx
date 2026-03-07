@@ -17,12 +17,21 @@ import {
   destroyTrafficDashboard,
 } from "./legacy/index";
 import {
+  AsyncSectionState,
   ChartsPayload,
+  DashboardUpdaters,
+  FilterState,
   IncidentListItem,
+  IncidentPageData,
+  IncidentViewState,
   MetricsPayload,
+  SortOption,
   TrafficListItem,
+  TrafficPageData,
+  TrafficViewState,
+  UiState,
   WeatherData,
-} from "./legacy/types";
+} from "./types";
 import TrafficItems from "./components/TrafficItems";
 import TrafficFilter from "./components/TrafficFilter";
 import IncidentItems from "./components/IncidentItems";
@@ -36,40 +45,6 @@ import NavButton from "./components/NavButton";
 import NavToggle from "./components/NavToggle";
 import CityDropdown from "./components/CityDropdown";
 
-type UiState = {
-  isLoaded: boolean;
-  isAutoUpdate: boolean;
-  isLiveUpdate: boolean;
-  currentCity: string | null;
-  navbarTitle: string;
-};
-
-type FilterState = {
-  selectedTrafficSort: "worst" | "best" | "alphabetical";
-  selectedIncidentType: string;
-  incidentRoadQuery: string;
-};
-
-type AsyncSectionState<T> = {
-  data: T | null;
-  isLoading: boolean;
-};
-
-type TrafficViewState = {
-  items: TrafficListItem[];
-  isLoading: boolean;
-  page: number;
-  totalPages: number;
-};
-
-type IncidentViewState = {
-  count: number;
-  items: IncidentListItem[];
-  allItems: IncidentListItem[];
-  isLoading: boolean;
-  page: number;
-  totalPages: number;
-};
 
 const initialUiState: UiState = {
   isLoaded: true,
@@ -127,7 +102,7 @@ export default function App() {
 
   // the reason using useMemo is to avoid re-creating the updaters object on every render
   const dashboardUpdaters = useMemo(
-    () => ({
+    (): DashboardUpdaters => ({
       onLoadedChange: (loaded: boolean) => {
         // only update isLoaded
         setUiState((prev) => ({ ...prev, isLoaded: loaded }));
@@ -157,11 +132,7 @@ export default function App() {
         items,
         page,
         totalPages,
-      }: {
-        items: TrafficListItem[];
-        page: number;
-        totalPages: number;
-      }) => {
+      }: TrafficPageData) => {
         setTrafficView({
           items,
           page,
@@ -177,12 +148,7 @@ export default function App() {
         allItems,
         page,
         totalPages,
-      }: {
-        items: IncidentListItem[];
-        allItems: IncidentListItem[];
-        page: number;
-        totalPages: number;
-      }) => {
+      }: IncidentPageData) => {
         setIncidentView((prev) => ({
           ...prev,
           items,
@@ -232,11 +198,7 @@ export default function App() {
         if (!alive) return;
         dashboardUpdaters.onChartsData(data);
       },
-      onTrafficPageData: (payload: {
-        items: TrafficListItem[];
-        page: number;
-        totalPages: number;
-      }) => {
+      onTrafficPageData: (payload: TrafficPageData) => {
         if (!alive) return;
         dashboardUpdaters.onTrafficPageData(payload);
       },
@@ -244,12 +206,7 @@ export default function App() {
         if (!alive) return;
         dashboardUpdaters.onIncidentsCountChange(count);
       },
-      onIncidentPageData: (payload: {
-        items: IncidentListItem[];
-        allItems: IncidentListItem[];
-        page: number;
-        totalPages: number;
-      }) => {
+      onIncidentPageData: (payload: IncidentPageData) => {
         if (!alive) return;
         dashboardUpdaters.onIncidentPageData(payload);
       },
@@ -265,7 +222,7 @@ export default function App() {
     };
   }, [dashboardUpdaters]);
 
-  function handleTrafficSortChange(sortBy: "worst" | "best" | "alphabetical") {
+  function handleTrafficSortChange(sortBy: SortOption) {
     setFilterState((prev) => ({ ...prev, selectedTrafficSort: sortBy }));
     trafficSortHandler(sortBy);
   }

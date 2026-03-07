@@ -15,7 +15,7 @@ import {
   TrafficStandardFormat,
   TrafficStatus,
   WeatherData,
-} from "./types.js";
+} from "../types/domain.js";
 
 // ================================
 // UTILITIES

@@ -1,4 +1,4 @@
-import type { TrafficListItem } from "../legacy/types";
+import type { TrafficListItem } from "../types";
 
 type Props = {
   items: TrafficListItem[];

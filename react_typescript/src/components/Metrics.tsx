@@ -1,4 +1,4 @@
-import type { MetricsPayload } from "../legacy/types";
+import type { MetricsPayload } from "../types";
 import { CONFIG } from "../legacy/config";
 
 type Props = {

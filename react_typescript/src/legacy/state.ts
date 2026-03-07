@@ -8,7 +8,7 @@ import type {
   IncidentStandardFormat,
   WeatherData,
   IncidentListItem,
-} from "./types.js";
+} from "../types/domain.js";
 
 // ================================
 // APP STATE

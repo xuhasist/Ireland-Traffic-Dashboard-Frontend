@@ -1,5 +1,5 @@
 import { CONFIG } from "../legacy/config";
-import { WeatherData } from "../legacy/types";
+import { WeatherData } from "../types";
 
 type Props = {
   data: WeatherData | null;

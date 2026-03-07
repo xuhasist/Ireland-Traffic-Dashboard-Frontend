@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ChartsPayload } from "../legacy/types";
+import { ChartsPayload } from "../types";
 import { Chart } from "chart.js/auto";
 import { CONFIG } from "../legacy/config";
 
