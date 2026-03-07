@@ -12,5 +12,5 @@ export {
   prevTrafficPageHandler,
   refreshHandler,
   trafficSortHandler,
+  destroyTrafficDashboard,
 } from "./dashboard";
-export type { DashboardHandle } from "./types";

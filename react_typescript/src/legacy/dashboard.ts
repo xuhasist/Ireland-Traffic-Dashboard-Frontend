@@ -5,7 +5,6 @@ import {
   BBox,
   ChartsPayload,
   CityConfig,
-  DashboardHandle,
   IncidentDetails,
   IncidentListItem,
   IncidentStandardFormat,
@@ -17,8 +16,6 @@ import {
   TrafficStatus,
   WeatherData,
 } from "./types.js";
-
-let __handle: DashboardHandle | null = null;
 
 // ================================
 // UTILITIES
@@ -1161,11 +1158,9 @@ let __bootstrapped = false;
  * Bootstraps the dashboard AFTER React has rendered the HTML.
  * We guard it so hot-reload / double-calls won't register events twice.
  */
-export async function bootstrapTrafficDashboard(
-  o: Options,
-): Promise<DashboardHandle> {
+export async function bootstrapTrafficDashboard(o: Options): Promise<void> {
   opts = o; // assign to outer variable for use in updateMetricsCards
-  if (__bootstrapped && __handle) return __handle;
+  if (__bootstrapped) return;
   // If we crash during bootstrap, we reset this back to false so you can
   // hot-reload and retry without refreshing the whole page.
   __bootstrapped = true;
@@ -1207,35 +1202,6 @@ export async function bootstrapTrafficDashboard(
     //dom.container?.classList.add("loaded");
     startAutoUpdate();
     hideLoading();
-
-    const destroy = () => {
-      // Stop periodic updates
-      try {
-        stopAutoUpdate();
-      } catch {}
-
-      state.charts.speedTrend.labels = [];
-      state.charts.speedTrend.data = [];
-      state.charts.congestion.good = 0;
-      state.charts.congestion.moderate = 0;
-      state.charts.congestion.heavy = 0;
-      // Destroy map
-      try {
-        state.map?.remove?.();
-      } catch {}
-
-      state.map = null;
-      __handle = null;
-      __bootstrapped = false;
-    };
-
-    __handle = {
-      centerMap: centerMapHandler,
-      destroy,
-      //setTrafficPage,
-      //trafficSortHandler,
-    };
-    return __handle;
   } catch (err) {
     // If anything throws, keep the page usable and visible.
     console.error("Legacy dashboard bootstrap failed:", err);
@@ -1243,4 +1209,24 @@ export async function bootstrapTrafficDashboard(
     __bootstrapped = false;
     throw err;
   }
+}
+
+export function destroyTrafficDashboard(): void {
+  // Stop periodic updates
+  try {
+    stopAutoUpdate();
+  } catch {}
+
+  state.charts.speedTrend.labels = [];
+  state.charts.speedTrend.data = [];
+  state.charts.congestion.good = 0;
+  state.charts.congestion.moderate = 0;
+  state.charts.congestion.heavy = 0;
+  // Destroy map
+  try {
+    state.map?.remove?.();
+  } catch {}
+
+  state.map = null;
+  __bootstrapped = false;
 }

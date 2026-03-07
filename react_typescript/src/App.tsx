@@ -14,7 +14,7 @@ import {
   prevTrafficPageHandler,
   refreshHandler,
   trafficSortHandler,
-  type DashboardHandle,
+  destroyTrafficDashboard,
 } from "./legacy/index";
 import {
   ChartsPayload,
@@ -37,10 +37,6 @@ import NavToggle from "./components/NavToggle";
 import CityDropdown from "./components/CityDropdown";
 
 export default function App() {
-  // use Ref to hold the dashboard handle across renders (permanent storage)
-  // don't use state, because we don't need to re-render when it changes
-  const dashRef = useRef<DashboardHandle | null>(null);
-
   const [isLoaded, setIsLoaded] = useState(true);
   const [isAutoUpdate, setIsAutoUpdate] = useState(true);
   const [isLiveUpdate, setIsLiveUpdate] = useState(false);
@@ -141,10 +137,8 @@ export default function App() {
     })
       .then((handle) => {
         if (!alive) {
-          handle.destroy();
           return;
         }
-        dashRef.current = handle;
       })
       .catch((err) => {
         console.error("bootstrapTrafficDashboard failed:", err);
@@ -154,8 +148,7 @@ export default function App() {
     // unmount 時或 effect 重跑前執行
     return () => {
       alive = false;
-      dashRef.current?.destroy();
-      dashRef.current = null;
+      destroyTrafficDashboard();
     };
   }, []);
 
