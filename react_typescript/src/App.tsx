@@ -1,7 +1,14 @@
 // src/App.tsx 回傳 JSX 元素插進 #root, 就是 React 產生的 UI(DOM) 結構
 import { useEffect, useRef, useState } from "react";
 import {
+  autoUpdateHandler,
   bootstrapTrafficDashboard,
+  cityChangeHandler,
+  dataModeHandler,
+  incidentRoadHandler,
+  incidentTypeHandler,
+  refreshHandler,
+  trafficSortHandler,
   type DashboardHandle,
 } from "./legacy/index";
 import {
@@ -34,6 +41,12 @@ export default function App() {
   const [isLiveUpdate, setIsLiveUpdate] = useState(false);
   const [currentCity, setCurrentCity] = useState<string | null>(null);
   const [navbarTitle, setNavbarTitle] = useState("🚦 Traffic Dashboard");
+
+  const [selectedTrafficSort, setSelectedTrafficSort] = useState<
+    "worst" | "best" | "alphabetical"
+  >("worst");
+  const [selectedIncidentType, setSelectedIncidentType] = useState("all");
+  const [incidentRoadQuery, setIncidentRoadQuery] = useState("");
 
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
@@ -141,6 +154,37 @@ export default function App() {
     };
   }, []);
 
+  function handleTrafficSortChange(sortBy: "worst" | "best" | "alphabetical") {
+    setSelectedTrafficSort(sortBy);
+    trafficSortHandler(sortBy);
+  }
+
+  function handleIncidentTypeChange(type: string) {
+    setSelectedIncidentType(type);
+    incidentTypeHandler(type);
+  }
+
+  function handleIncidentRoadChange(query: string) {
+    setIncidentRoadQuery(query);
+    incidentRoadHandler(query);
+  }
+
+  function handleLiveUpdateChange(nextIsLive: boolean) {
+    void dataModeHandler(nextIsLive);
+  }
+
+  function handleAutoUpdateClick() {
+    autoUpdateHandler(isAutoUpdate);
+  }
+
+  function handleRefreshClick() {
+    void refreshHandler();
+  }
+
+  function handleCityChange(city: string) {
+    void cityChangeHandler(city);
+  }
+
   return (
     <>
       <div className={`loading-overlay ${isLoaded ? "" : "active"}`}>
@@ -156,15 +200,25 @@ export default function App() {
           <WeatherWidget data={weatherData} isLoading={weatherLoading} />
 
           <div className="city-selector">
-            <CityDropdown currentCity={currentCity} />
+            <CityDropdown
+              currentCity={currentCity}
+              onChange={handleCityChange}
+            />
           </div>
 
           <div className="data-toggle">
-            <NavToggle isLiveUpdate={isLiveUpdate} />
+            <NavToggle
+              isLiveUpdate={isLiveUpdate}
+              onChange={handleLiveUpdateChange}
+            />
           </div>
 
           <div className="nav-buttons">
-            <NavButton isAutoUpdate={isAutoUpdate} />
+            <NavButton
+              isAutoUpdate={isAutoUpdate}
+              onRefresh={handleRefreshClick}
+              onToggleAutoUpdate={handleAutoUpdateClick}
+            />
           </div>
         </div>
       </nav>
@@ -209,7 +263,10 @@ export default function App() {
           <div className="traffic-header">
             <h2>Live Traffic Status</h2>
             <div className="traffic-controls">
-              <TrafficFilter />
+              <TrafficFilter
+                selectedSort={selectedTrafficSort}
+                onChange={handleTrafficSortChange}
+              />
             </div>
           </div>
           <div className="traffic-items-container">
@@ -235,7 +292,13 @@ export default function App() {
               </span>
             </div>
             <div className="incident-controls">
-              <IncidentFilter incidents={incidentAll} />
+              <IncidentFilter
+                incidents={incidentAll}
+                selectedType={selectedIncidentType}
+                roadQuery={incidentRoadQuery}
+                onTypeChange={handleIncidentTypeChange}
+                onRoadQueryChange={handleIncidentRoadChange}
+              />
             </div>
           </div>
           <div className="incident-items-container">

@@ -1,11 +1,11 @@
-import { cityChangeHandler } from "../legacy/dashboard";
 import { CONFIG } from "../legacy/config";
 
 type Props = {
   currentCity: string | null;
+  onChange: (city: string) => void;
 };
 
-export default function CityDropdown({ currentCity }: Props) {
+export default function CityDropdown({ currentCity, onChange }: Props) {
   if (!currentCity) return null;
 
   const cities = Object.keys(CONFIG.cities);
@@ -18,7 +18,7 @@ export default function CityDropdown({ currentCity }: Props) {
         className="time-dropdown"
         id="cityDropdown"
         value={currentCity}
-        onChange={(e) => cityChangeHandler(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
       >
         {cities.map((city) => (
           <option key={city} value={city}>

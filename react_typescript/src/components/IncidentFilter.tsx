@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { incidentRoadHandler, incidentTypeHandler } from "../legacy/dashboard";
+import { useEffect, useMemo } from "react";
 
 type Incident = {
   severity: string | null;
@@ -8,11 +7,19 @@ type Incident = {
 
 type Props = {
   incidents: Incident[];
+  selectedType: string;
+  roadQuery: string;
+  onTypeChange: (type: string) => void;
+  onRoadQueryChange: (query: string) => void;
 };
 
-export default function IncidentFilter({ incidents }: Props) {
-  const [selectedType, setSelectedType] = useState("all");
-
+export default function IncidentFilter({
+  incidents,
+  selectedType,
+  roadQuery,
+  onTypeChange,
+  onRoadQueryChange,
+}: Props) {
   // 只有 incidents 變了才重新算，不然沿用舊的 uniqueTypes，不會觸發 re-render
   const uniqueTypes = useMemo(
     () =>
@@ -33,10 +40,9 @@ export default function IncidentFilter({ incidents }: Props) {
       selectedType === "all" || uniqueTypes.includes(selectedType);
 
     if (!stillValid) {
-      setSelectedType("all");
-      incidentTypeHandler("all");
+      onTypeChange("all");
     }
-  }, [selectedType, uniqueTypes]);
+  }, [selectedType, uniqueTypes, onTypeChange]);
 
   return (
     <>
@@ -44,11 +50,7 @@ export default function IncidentFilter({ incidents }: Props) {
         id="incidentTypeFilter"
         className="sort-dropdown"
         value={selectedType}
-        onChange={(e) => {
-          const nextType = e.target.value;
-          setSelectedType(nextType);
-          incidentTypeHandler(nextType);
-        }}
+        onChange={(e) => onTypeChange(e.target.value)}
       >
         <option value="all">All types</option>
         {uniqueTypes.map((type) => (
@@ -64,7 +66,8 @@ export default function IncidentFilter({ incidents }: Props) {
         type="text"
         placeholder="Search road name…"
         aria-label="Search incident road name"
-        onChange={(e) => incidentRoadHandler(e.target.value)}
+        value={roadQuery}
+        onChange={(e) => onRoadQueryChange(e.target.value)}
       />
     </>
   );

@@ -1,10 +1,9 @@
-import { dataModeHandler } from "../legacy/dashboard";
-
 type Props = {
   isLiveUpdate: boolean;
+  onChange: (nextIsLive: boolean) => void;
 };
 
-export default function NavToggle({ isLiveUpdate }: Props) {
+export default function NavToggle({ isLiveUpdate, onChange }: Props) {
   return (
     <>
       <span className="toggle-label" id="dataModeLabel">
@@ -15,7 +14,7 @@ export default function NavToggle({ isLiveUpdate }: Props) {
           type="checkbox"
           id="dataModeToggle"
           checked={isLiveUpdate}
-          onChange={() => dataModeHandler(!isLiveUpdate)}
+          onChange={() => onChange(!isLiveUpdate)}
         />
         <span className="slider"></span>
       </label>
