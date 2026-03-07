@@ -1,5 +1,5 @@
 // src/App.tsx 回傳 JSX 元素插進 #root, 就是 React 產生的 UI(DOM) 結構
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   autoUpdateHandler,
   bootstrapTrafficDashboard,
@@ -36,165 +36,283 @@ import NavButton from "./components/NavButton";
 import NavToggle from "./components/NavToggle";
 import CityDropdown from "./components/CityDropdown";
 
+type UiState = {
+  isLoaded: boolean;
+  isAutoUpdate: boolean;
+  isLiveUpdate: boolean;
+  currentCity: string | null;
+  navbarTitle: string;
+};
+
+type FilterState = {
+  selectedTrafficSort: "worst" | "best" | "alphabetical";
+  selectedIncidentType: string;
+  incidentRoadQuery: string;
+};
+
+type AsyncSectionState<T> = {
+  data: T | null;
+  isLoading: boolean;
+};
+
+type TrafficViewState = {
+  items: TrafficListItem[];
+  isLoading: boolean;
+  page: number;
+  totalPages: number;
+};
+
+type IncidentViewState = {
+  count: number;
+  items: IncidentListItem[];
+  allItems: IncidentListItem[];
+  isLoading: boolean;
+  page: number;
+  totalPages: number;
+};
+
+const initialUiState: UiState = {
+  isLoaded: true,
+  isAutoUpdate: true,
+  isLiveUpdate: false,
+  currentCity: null,
+  navbarTitle: "🚦 Traffic Dashboard",
+};
+
+const initialFilterState: FilterState = {
+  selectedTrafficSort: "worst",
+  selectedIncidentType: "all",
+  incidentRoadQuery: "",
+};
+
+const initialWeatherState: AsyncSectionState<WeatherData> = {
+  data: null,
+  isLoading: true,
+};
+
+const initialMetricsState: AsyncSectionState<MetricsPayload> = {
+  data: null,
+  isLoading: true,
+};
+
+const initialChartsState: AsyncSectionState<ChartsPayload> = {
+  data: null,
+  isLoading: true,
+};
+
+const initialTrafficViewState: TrafficViewState = {
+  items: [],
+  isLoading: true,
+  page: 1,
+  totalPages: 1,
+};
+
+const initialIncidentViewState: IncidentViewState = {
+  count: 0,
+  items: [],
+  allItems: [],
+  isLoading: true,
+  page: 1,
+  totalPages: 1,
+};
+
 export default function App() {
-  const [isLoaded, setIsLoaded] = useState(true);
-  const [isAutoUpdate, setIsAutoUpdate] = useState(true);
-  const [isLiveUpdate, setIsLiveUpdate] = useState(false);
-  const [currentCity, setCurrentCity] = useState<string | null>(null);
-  const [navbarTitle, setNavbarTitle] = useState("🚦 Traffic Dashboard");
+  const [uiState, setUiState] = useState(initialUiState);
+  const [filterState, setFilterState] = useState(initialFilterState);
+  const [weatherState, setWeatherState] = useState(initialWeatherState);
+  const [metricsState, setMetricsState] = useState(initialMetricsState);
+  const [chartsState, setChartsState] = useState(initialChartsState);
+  const [trafficView, setTrafficView] = useState(initialTrafficViewState);
+  const [incidentView, setIncidentView] = useState(initialIncidentViewState);
 
-  const [selectedTrafficSort, setSelectedTrafficSort] = useState<
-    "worst" | "best" | "alphabetical"
-  >("worst");
-  const [selectedIncidentType, setSelectedIncidentType] = useState("all");
-  const [incidentRoadQuery, setIncidentRoadQuery] = useState("");
+  // the reason using useMemo is to avoid re-creating the updaters object on every render
+  const dashboardUpdaters = useMemo(
+    () => ({
+      onLoadedChange: (loaded: boolean) => {
+        // only update isLoaded
+        setUiState((prev) => ({ ...prev, isLoaded: loaded }));
+      },
+      onAutoUpdateChange: (isAuto: boolean) => {
+        setUiState((prev) => ({ ...prev, isAutoUpdate: isAuto }));
+      },
+      onLiveUpdateChange: (isLive: boolean) => {
+        setUiState((prev) => ({ ...prev, isLiveUpdate: isLive }));
+      },
+      onNavbarTitle: (title: string) => {
+        setUiState((prev) => ({ ...prev, navbarTitle: title }));
+      },
+      onCityChange: (city: string) => {
+        setUiState((prev) => ({ ...prev, currentCity: city }));
+      },
+      onWeatherData: (data: WeatherData) => {
+        setWeatherState({ data, isLoading: false });
+      },
+      onMetricsData: (data: MetricsPayload) => {
+        setMetricsState({ data, isLoading: false });
+      },
+      onChartsData: (data: ChartsPayload) => {
+        setChartsState({ data, isLoading: false });
+      },
+      onTrafficPageData: ({
+        items,
+        page,
+        totalPages,
+      }: {
+        items: TrafficListItem[];
+        page: number;
+        totalPages: number;
+      }) => {
+        setTrafficView({
+          items,
+          page,
+          totalPages,
+          isLoading: false,
+        });
+      },
+      onIncidentsCountChange: (count: number) => {
+        setIncidentView((prev) => ({ ...prev, count }));
+      },
+      onIncidentPageData: ({
+        items,
+        allItems,
+        page,
+        totalPages,
+      }: {
+        items: IncidentListItem[];
+        allItems: IncidentListItem[];
+        page: number;
+        totalPages: number;
+      }) => {
+        setIncidentView((prev) => ({
+          ...prev,
+          items,
+          allItems,
+          page,
+          totalPages,
+          isLoading: false,
+        }));
+      },
+    }),
+    [],
+  );
 
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [weatherLoading, setWeatherLoading] = useState(true);
-
-  const [metricsData, setMetricsData] = useState<MetricsPayload | null>(null);
-  const [metricsLoading, setMetricsLoading] = useState(true);
-
-  const [chartsData, setChartsData] = useState<ChartsPayload | null>(null);
-  const [chartsLoading, setChartsLoading] = useState(true);
-
-  const [trafficItems, setTrafficItems] = useState<TrafficListItem[]>([]);
-  const [trafficLoading, setTrafficLoading] = useState(true);
-  const [trafficPage, setTrafficPage] = useState(1);
-  const [trafficTotalPages, setTrafficTotalPages] = useState(1);
-
-  const [incidentsCount, setIncidentsCount] = useState(0);
-  const [incidentItems, setIncidentItems] = useState<IncidentListItem[]>([]);
-  const [incidentAll, setIncidentAll] = useState<IncidentListItem[]>([]);
-  const [incidentLoading, setIncidentLoading] = useState(true);
-  const [incidentPage, setIncidentPage] = useState(1);
-  const [incidentTotalPages, setIncidentTotalPages] = useState(1);
-
-  // 元件第一次 render 完後跑一次, 之後不會因為 state 改變重跑
   useEffect(() => {
     let alive = true;
 
-    // Run after the first render so all #id and .class elements exist.
-    // ① effect：做事（訂閱、請求、操作 DOM、啟動東西）
-    bootstrapTrafficDashboard({
-      // 接收端（App）決定「我用 payload 裡哪些欄位」
-      // receiver decides what fields in the payload to use
-      onLoadedChange: (loaded) => {
+    const guardedUpdaters = {
+      onLoadedChange: (loaded: boolean) => {
         if (!alive) return;
-        // 之後的畫面更新靠這行，讓 React 重新 render
-        setIsLoaded(loaded);
+        dashboardUpdaters.onLoadedChange(loaded);
       },
-      onAutoUpdateChange: (isAuto) => {
+      onAutoUpdateChange: (isAuto: boolean) => {
         if (!alive) return;
-        setIsAutoUpdate(isAuto);
+        dashboardUpdaters.onAutoUpdateChange(isAuto);
       },
-      onLiveUpdateChange: (isLive) => {
+      onLiveUpdateChange: (isLive: boolean) => {
         if (!alive) return;
-        setIsLiveUpdate(isLive);
+        dashboardUpdaters.onLiveUpdateChange(isLive);
       },
-      onNavbarTitle: (title) => {
+      onNavbarTitle: (title: string) => {
         if (!alive) return;
-        setNavbarTitle(title);
+        dashboardUpdaters.onNavbarTitle(title);
       },
-      onCityChange: (city) => {
+      onCityChange: (city: string) => {
         if (!alive) return;
-        setCurrentCity(city);
+        dashboardUpdaters.onCityChange(city);
       },
-      onWeatherData: (data) => {
+      onWeatherData: (data: WeatherData) => {
         if (!alive) return;
-        setWeatherData(data);
-        setWeatherLoading(false);
+        dashboardUpdaters.onWeatherData(data);
       },
-      onMetricsData: (data) => {
+      onMetricsData: (data: MetricsPayload) => {
         if (!alive) return;
-        setMetricsData(data);
-        setMetricsLoading(false);
+        dashboardUpdaters.onMetricsData(data);
       },
-      onChartsData: (data) => {
+      onChartsData: (data: ChartsPayload) => {
         if (!alive) return;
-        setChartsData(data);
-        setChartsLoading(false);
+        dashboardUpdaters.onChartsData(data);
       },
-      onTrafficPageData: ({ items, page, totalPages }) => {
+      onTrafficPageData: (payload: {
+        items: TrafficListItem[];
+        page: number;
+        totalPages: number;
+      }) => {
         if (!alive) return;
-        setTrafficItems(items);
-        setTrafficPage(page);
-        setTrafficTotalPages(totalPages);
-        setTrafficLoading(false);
+        dashboardUpdaters.onTrafficPageData(payload);
       },
-      onIncidentsCountChange: (count) => {
+      onIncidentsCountChange: (count: number) => {
         if (!alive) return;
-        setIncidentsCount(count);
+        dashboardUpdaters.onIncidentsCountChange(count);
       },
-      onIncidentPageData: ({ items, allItems, page, totalPages }) => {
+      onIncidentPageData: (payload: {
+        items: IncidentListItem[];
+        allItems: IncidentListItem[];
+        page: number;
+        totalPages: number;
+      }) => {
         if (!alive) return;
-        setIncidentItems(items);
-        setIncidentAll(allItems);
-        setIncidentPage(page);
-        setIncidentTotalPages(totalPages);
-        setIncidentLoading(false);
+        dashboardUpdaters.onIncidentPageData(payload);
       },
-    })
-      .then((handle) => {
-        if (!alive) {
-          return;
-        }
-      })
-      .catch((err) => {
-        console.error("bootstrapTrafficDashboard failed:", err);
-      });
+    };
 
-    // ② cleanup：善後（取消、關閉、清理）
-    // unmount 時或 effect 重跑前執行
+    bootstrapTrafficDashboard(guardedUpdaters).catch((err) => {
+      console.error("bootstrapTrafficDashboard failed:", err);
+    });
+
     return () => {
       alive = false;
       destroyTrafficDashboard();
     };
-  }, []);
+  }, [dashboardUpdaters]);
 
   function handleTrafficSortChange(sortBy: "worst" | "best" | "alphabetical") {
-    setSelectedTrafficSort(sortBy);
+    setFilterState((prev) => ({ ...prev, selectedTrafficSort: sortBy }));
     trafficSortHandler(sortBy);
   }
 
   function handleIncidentTypeChange(type: string) {
-    setSelectedIncidentType(type);
+    setFilterState((prev) => ({ ...prev, selectedIncidentType: type }));
     incidentTypeHandler(type);
   }
 
   function handleIncidentRoadChange(query: string) {
-    setIncidentRoadQuery(query);
+    setFilterState((prev) => ({ ...prev, incidentRoadQuery: query }));
     incidentRoadHandler(query);
   }
 
   return (
     <>
-      <div className={`loading-overlay ${isLoaded ? "" : "active"}`}>
+      <div className={`loading-overlay ${uiState.isLoaded ? "" : "active"}`}>
         <div className="spinner"></div>
         <p>Loading traffic data...</p>
       </div>
 
       <nav className="navbar">
-        <h1>{navbarTitle}</h1>
+        <h1>{uiState.navbarTitle}</h1>
 
         <div className="navbar-right">
-          {/*Weather Widget*/}
-          <WeatherWidget data={weatherData} isLoading={weatherLoading} />
+          <WeatherWidget
+            data={weatherState.data}
+            isLoading={weatherState.isLoading}
+          />
 
           <div className="city-selector">
             <CityDropdown
-              currentCity={currentCity}
+              currentCity={uiState.currentCity}
               onChange={cityChangeHandler}
             />
           </div>
 
           <div className="data-toggle">
-            <NavToggle isLiveUpdate={isLiveUpdate} onChange={dataModeHandler} />
+            <NavToggle
+              isLiveUpdate={uiState.isLiveUpdate}
+              onChange={dataModeHandler}
+            />
           </div>
 
           <div className="nav-buttons">
             <NavButton
-              isAutoUpdate={isAutoUpdate}
+              isAutoUpdate={uiState.isAutoUpdate}
               onRefresh={refreshHandler}
               onToggleAutoUpdate={autoUpdateHandler}
             />
@@ -202,14 +320,14 @@ export default function App() {
         </div>
       </nav>
 
-      {/*Main Container*/}
-      <div className={`container ${isLoaded ? " loaded" : ""}`}>
-        {/*Metrics Grid*/}
+      <div className={`container ${uiState.isLoaded ? " loaded" : ""}`}>
         <div className="metrics-grid">
-          <Metrics data={metricsData} isLoading={metricsLoading} />
+          <Metrics
+            data={metricsState.data}
+            isLoading={metricsState.isLoading}
+          />
         </div>
 
-        {/*Map Section*/}
         <div className="map-section">
           <div className="section-header">
             <h2>Live Traffic Map</h2>
@@ -234,60 +352,63 @@ export default function App() {
           </div>
         </div>
 
-        {/*Charts Grid*/}
-        <Charts data={chartsData} isLoading={chartsLoading} />
+        <Charts data={chartsState.data} isLoading={chartsState.isLoading} />
 
-        {/*Traffic List*/}
         <div className="traffic-list">
           <div className="traffic-header">
             <h2>Live Traffic Status</h2>
             <div className="traffic-controls">
               <TrafficFilter
-                selectedSort={selectedTrafficSort}
+                selectedSort={filterState.selectedTrafficSort}
                 onChange={handleTrafficSortChange}
               />
             </div>
           </div>
           <div className="traffic-items-container">
-            <TrafficItems items={trafficItems} isLoading={trafficLoading} />
+            <TrafficItems
+              items={trafficView.items}
+              isLoading={trafficView.isLoading}
+            />
           </div>
           <Pagination
             kind="traffic"
-            page={trafficPage}
-            totalPages={trafficTotalPages}
-            disabled={trafficLoading}
+            page={trafficView.page}
+            totalPages={trafficView.totalPages}
+            disabled={trafficView.isLoading}
             onPrev={prevTrafficPageHandler}
             onNext={nextTrafficPageHandler}
           />
         </div>
 
-        {/*Incidents Section*/}
         <div className="incidents-section">
           <div className="incidents-header">
             <div className="incidents-title">
               <h2>Active Incidents</h2>
               <span className="count-badge" id="incidentCountBadge">
-                {incidentsCount}
+                {incidentView.count}
               </span>
             </div>
             <div className="incident-controls">
               <IncidentFilter
-                incidents={incidentAll}
-                selectedType={selectedIncidentType}
-                roadQuery={incidentRoadQuery}
+                incidents={incidentView.allItems}
+                selectedType={filterState.selectedIncidentType}
+                roadQuery={filterState.incidentRoadQuery}
                 onTypeChange={handleIncidentTypeChange}
                 onRoadQueryChange={handleIncidentRoadChange}
               />
             </div>
           </div>
           <div className="incident-items-container">
-            <IncidentItems items={incidentItems} isLoading={incidentLoading} />
+            <IncidentItems
+              items={incidentView.items}
+              isLoading={incidentView.isLoading}
+            />
           </div>
           <Pagination
             kind="incident"
-            page={incidentPage}
-            totalPages={incidentTotalPages}
-            disabled={incidentLoading}
+            page={incidentView.page}
+            totalPages={incidentView.totalPages}
+            disabled={incidentView.isLoading}
             onPrev={prevIncidentPageHandler}
             onNext={nextIncidentPageHandler}
           />
