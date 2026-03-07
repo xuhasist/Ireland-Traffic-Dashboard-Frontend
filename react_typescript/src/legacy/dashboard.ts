@@ -13,30 +13,19 @@ import {
   SortOption,
   TrafficListItem,
   TrafficStandardFormat,
-  TrafficStatus,
   WeatherData,
 } from "../types/domain.js";
 import { OpenWeatherService, TomTomService } from "../services";
+import {
+  mapIncidentsToListItems,
+  mapTrafficFlowsToListItems,
+} from "../mappers";
 
 // ================================
 // UTILITIES
 // ================================
 const clamp = (n: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, n)); // limit n between min and max
-
-function minutesAgoToText(minutesAgo: number): string {
-  // check minutesAgo is a number
-  if (!Number.isFinite(minutesAgo) || minutesAgo < 0) return "--";
-  if (minutesAgo < 60) return `${minutesAgo} mins ago`;
-  const hoursAgo = Math.floor(minutesAgo / 60);
-  return `${hoursAgo} hour${hoursAgo > 1 ? "s" : ""} ago`;
-}
-
-function jamToStatus(jamFactor: number): TrafficStatus {
-  if (jamFactor < CONFIG.thresholds.goodMax) return "good";
-  if (jamFactor < CONFIG.thresholds.moderateMax) return "moderate";
-  return "heavy";
-}
 
 function showLoading() {
   if (opts?.onLoadedChange) opts.onLoadedChange(false);
@@ -61,7 +50,6 @@ function formatTimeWithSeconds(timeZone: string): string {
 // 呼叫端（dashboard/legacy）決定「會傳什麼 payload」
 // caller decides what payload to pass in
 type Options = {
-  //onProgressChange: (v: number) => void;
   onLoadedChange?: (isLoaded: boolean) => void;
   onAutoUpdateChange?: (isRunning: boolean) => void;
   onLiveUpdateChange?: (isLive: boolean) => void;
@@ -74,9 +62,7 @@ type Options = {
     items: TrafficListItem[];
     page: number;
     totalPages: number;
-    //totalItems: number;
   }) => void;
-  //onTrafficSortChange?: (sortBy: SortOption) => void;
   onIncidentsCountChange?: (count: number) => void;
   onIncidentPageData?: (payload: {
     items: IncidentListItem[];
@@ -289,9 +275,6 @@ function generateMockIncidents(): { results: IncidentStandardFormat[] } {
   */
 }
 
-// ================================
-// SERVICES
-// ================================
 // ========================================
 // MAP FUNCTIONS
 // ========================================
@@ -308,7 +291,6 @@ function initializeMap() {
   }).addTo(state.map);
 
   // Layer group for traffic flow polylines (cleared/redrawn on each refresh)
-  //state.mapLayers = state.mapLayers || {};
   if (state.mapLayers.traffic) state.mapLayers.traffic.clearLayers();
   state.mapLayers.traffic = L.layerGroup().addTo(state.map);
 }
@@ -369,8 +351,6 @@ function sortTrafficData(sortBy: SortOption) {
 }
 
 export function trafficSortHandler(sortBy: SortOption) {
-  //state.traffic.page = 1;
-  //const sortBy = dom.sortDropdown.value as SortOption;
   const applyFilter = sortBy === state.sort;
 
   sortTrafficData(sortBy);
@@ -380,7 +360,7 @@ export function trafficSortHandler(sortBy: SortOption) {
 }
 
 export function incidentRoadHandler(query: string) {
-  state.incidents.filters.roadQuery = query; //dom.incidentRoadSearch.value;
+  state.incidents.filters.roadQuery = query;
   state.incidents.page = 1;
   renderIncidentsLists();
   updateMetricsCards();
@@ -405,12 +385,6 @@ export function autoUpdateHandler(isAutoUpdate: boolean): void {
 }
 
 export function updateAutoUpdateButton(isRunning: boolean): void {
-  /* if (!dom.autoUpdateBtn) return; // check button exists
-  dom.autoUpdateBtnIcon.textContent = isRunning ? "⏸️" : "▶️";
-  dom.autoUpdateBtnText.textContent = isRunning
-    ? "Stop Auto-Update"
-    : "Start Auto-Update"; */
-
   if (opts?.onAutoUpdateChange) opts.onAutoUpdateChange(isRunning);
 }
 
@@ -428,7 +402,6 @@ function getTrafficColor(
   jamFactor: number,
   colors: { good: string; moderate: string; heavy: string },
 ): string {
-  // colors: { good, moderate, heavy }
   const jf = Number(jamFactor) || 0;
   if (jf <= CONFIG.thresholds.goodMax) return colors.good;
   if (jf <= CONFIG.thresholds.moderateMax) return colors.moderate;
@@ -451,7 +424,6 @@ function updateTrafficMap(flowResults: TrafficStandardFormat[]) {
     const jam = seg?.currentFlow?.jamFactor ?? 0;
     const speed = seg?.currentFlow?.speed ?? 0;
     const free = seg?.currentFlow?.freeFlow ?? 0;
-    //const confidence = seg?.currentFlow?.confidence ?? null;
     const traversability = seg?.currentFlow?.traversability ?? "open";
 
     links.forEach((link) => {
@@ -471,17 +443,6 @@ function updateTrafficMap(flowResults: TrafficStandardFormat[]) {
         opacity: 0.85,
         dashArray: traversability === "closed" ? "6 6" : undefined, // dashed if closed
       });
-
-      /*
-      const outline = L.polyline(latlngs, {
-        color: "#111", // 外框顏色
-        weight: 5, // 外框粗
-        opacity: 0.65,
-        lineCap: "round",
-        lineJoin: "round",
-        interactive: false,
-      }).addTo(state.mapLayers.traffic);
-      */
 
       const title = seg?.location?.description ?? "Road segment";
 
@@ -507,9 +468,7 @@ function updateTrafficMap(flowResults: TrafficStandardFormat[]) {
 
 function updateCharts() {
   if (!state.traffic.data.length) return;
-  //console.log("!!!state.traffic.data.length:", state.traffic.data.length);
 
-  //const now = new Date();
   const timeLabel = formatTimeWithSeconds(CONFIG.timeZone); // get current time label
 
   const avgSpeed =
@@ -542,11 +501,6 @@ function updateCharts() {
   state.charts.congestion.moderate = moderate;
   state.charts.congestion.heavy = heavy;
 
-  /* console.log(
-    "state.charts.speedTrend.labels:",
-    state.charts.speedTrend.labels.length,
-  ); */
-
   opts?.onChartsData?.({
     speedTrend: {
       labels: [...state.charts.speedTrend.labels],
@@ -570,41 +524,6 @@ function updateWeatherWidget() {
   opts.onWeatherData(state.weather);
 }
 
-// ================================
-// DATA TRANSFORMS
-// ================================
-function toTrafficListItem(flowResult: TrafficStandardFormat): TrafficListItem {
-  const jamFactor = flowResult.currentFlow.jamFactor;
-  const status = jamToStatus(jamFactor);
-  return {
-    name: flowResult.location.description,
-    jamLevel: jamFactor,
-    speed: flowResult.currentFlow.speed,
-    status: status,
-    freeFlow: flowResult.currentFlow.freeFlow,
-    //confidence: flowResult.currentFlow.confidence,
-  };
-}
-
-function toIncidentListItem(
-  incidentResult: IncidentStandardFormat,
-): IncidentListItem {
-  const startTime = new Date(incidentResult.incidentDetails.startTime);
-  const minutesAgo = Math.floor(
-    (Date.now() - new Date(startTime).getTime()) / 60000,
-  );
-  const delayMinutes = Math.floor(incidentResult.impact.delayInSeconds / 60);
-
-  return {
-    type: incidentResult.incidentDetails.type.replace("_", " "),
-    icon: incidentResult.icon,
-    location: incidentResult.location.description,
-    time: minutesAgoToText(minutesAgo),
-    delay: `${delayMinutes} min delay`,
-    severity: incidentResult.incidentDetails.criticality,
-  };
-}
-
 export async function cityChangeHandler(currentCity: string) {
   showLoading();
   setCity(currentCity);
@@ -616,12 +535,9 @@ export async function cityChangeHandler(currentCity: string) {
 function updateMetricsCards() {
   if (!opts?.onMetricsData) return;
 
-  //if (!dom.metricCards?.length) return;
-
   const traffic = state.traffic.data ?? [];
   const incidents = state.incidents.data ?? [];
 
-  //const city = getCityConfig();
   const updatedAt = formatTimeWithSeconds(CONFIG.timeZone);
 
   state.metrics.lastUpdatedAt = updatedAt;
@@ -640,12 +556,6 @@ function updateMetricsCards() {
     (d) => Number(d.jamLevel) >= CONFIG.thresholds.moderateMax,
   ).length;
 
-  /*
-  const filteredIncidents =
-    typeof getFilteredIncidents === "function"
-      ? getFilteredIncidents()
-      : incidents;
-  */
   const filteredIncidents = getFilteredIncidents();
 
   const activeIncidentsFiltered = filteredIncidents.length;
@@ -768,15 +678,6 @@ function renderIncidentsLists() {
 async function loadDashboardData() {
   // load traffic, incidents, weather data
 
-  /* console.log(
-    "dataMode:",
-    state.dataMode,
-    "city:",
-    state.cityKey,
-    "roads:",
-    getCityConfig().roads?.length,
-  ); */
-
   const city = getCityConfig();
 
   // Promise.all: run independent network calls in parallel to reduce total wait time.
@@ -817,24 +718,16 @@ async function loadDashboardData() {
   ]);
   state.weather = weather;
 
-  //console.log("trafficFlow results:", trafficFlow?.results?.length);
-
   // Transform
-  //state.traffic.data = (trafficFlow?.results ?? []).map(toTrafficListItem);
   state.traffic.raw = trafficFlow?.results ?? [];
-  state.traffic.data = state.traffic.raw.map(toTrafficListItem);
-  state.incidents.data = (incidents?.results ?? []).map(toIncidentListItem);
-
-  //console.log("state.traffic.data.length:", state.traffic.data.length);
-
-  //refreshIncidentTypeOptions();
+  state.traffic.data = mapTrafficFlowsToListItems(state.traffic.raw);
+  state.incidents.data = mapIncidentsToListItems(incidents?.results ?? []);
 }
 
 // ================================
 // DASHBOARD UPDATE PIPELINE
 // ================================
 async function initializeDashboard({ flashFilter = false } = {}) {
-  //console.log("Initializing dashboard data:", new Date().toLocaleString());
   // avoid no parameter error
   await loadDashboardData();
   // Draw traffic flow on the map using raw flow segments
@@ -870,7 +763,6 @@ function stopAutoUpdate() {
 }
 
 function toggleAutoUpdate(isRunning?: boolean) {
-  //const isRunning = Boolean(state.autoUpdateTimer);
   if (isRunning) stopAutoUpdate();
   else startAutoUpdate();
 }
@@ -896,7 +788,6 @@ export async function bootstrapTrafficDashboard(o: Options): Promise<void> {
     console.log(
       "Traffic Dashboard Script Loaded: " + new Date().toLocaleString(),
     );
-    //cacheDom();
 
     // Load persisted preferences
     const savedCity = localStorage.getItem("traffic_dashboard_city"); // might be null
@@ -905,24 +796,13 @@ export async function bootstrapTrafficDashboard(o: Options): Promise<void> {
     if (savedMode === "live" || savedMode === "mock")
       state.dataMode = savedMode; // including null check
 
-    // Populate city dropdown (in case HTML changes)
-    /* if (dom.cityDropdown) {
-      const keys = Object.keys(CONFIG.cities);
-      dom.cityDropdown.innerHTML = keys
-        .map((k) => `<option value="${k}">${k}</option>`)
-        .join("");
-    } */
-
     syncUIFromState();
     setDataMode(state.dataMode); // update label
     setCity(state.cityKey); // update title/tooltip + persist
 
     showLoading();
-    //setupEventListeners();
     initializeMap();
-    //initializeCharts();
     await initializeDashboard();
-    //dom.container?.classList.add("loaded");
     startAutoUpdate();
     hideLoading();
   } catch (err) {
