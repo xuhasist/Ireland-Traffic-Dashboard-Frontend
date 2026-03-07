@@ -1,7 +1,7 @@
 type Props = {
   isAutoUpdate: boolean;
   onRefresh: () => void;
-  onToggleAutoUpdate: () => void;
+  onToggleAutoUpdate: (isAutoUpdate: boolean) => void;
 };
 
 export default function NavButton({
@@ -15,7 +15,10 @@ export default function NavButton({
         <span className="icon">🔄</span>
         <span className="text">Refresh</span>
       </button>
-      <button className="btn btn-primary" onClick={onToggleAutoUpdate}>
+      <button
+        className="btn btn-primary"
+        onClick={() => onToggleAutoUpdate(isAutoUpdate)}
+      >
         <span className="icon">{isAutoUpdate ? "⏸️" : "▶️"}</span>
         <span className="text">
           {isAutoUpdate ? "Stop Auto-Update" : "Start Auto-Update"}

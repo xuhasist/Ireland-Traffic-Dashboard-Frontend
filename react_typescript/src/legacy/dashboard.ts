@@ -125,7 +125,7 @@ function setCity(cityKey: string) {
   state.charts.congestion.heavy = 0;
 
   // Recenter map
-  centerMap();
+  centerMapHandler();
 }
 
 function setDataMode(mode: string): void {
@@ -587,7 +587,7 @@ function initializeMap() {
   state.mapLayers.traffic = L.layerGroup().addTo(state.map);
 }
 
-function centerMap() {
+export function centerMapHandler() {
   const city = getCityConfig();
   if (state.map) state.map.setView(city.center, CONFIG.zoom);
 }
@@ -603,11 +603,11 @@ function setTrafficPage(page: number) {
   renderTrafficLists();
 }
 
-function prevTrafficPage() {
+export function prevTrafficPageHandler() {
   setTrafficPage(state.traffic.page - 1);
 }
 
-function nextTrafficPage() {
+export function nextTrafficPageHandler() {
   setTrafficPage(state.traffic.page + 1);
 }
 
@@ -622,11 +622,11 @@ function setIncidentPage(page: number) {
   renderIncidentsLists();
 }
 
-function prevIncidentPage() {
+export function prevIncidentPageHandler() {
   setIncidentPage(state.incidents.page - 1);
 }
 
-function nextIncidentPage() {
+export function nextIncidentPageHandler() {
   setIncidentPage(state.incidents.page + 1);
 }
 
@@ -690,7 +690,7 @@ export function updateAutoUpdateButton(isRunning: boolean): void {
 
 export async function refreshHandler() {
   showLoading();
-  centerMap();
+  centerMapHandler();
   await initializeDashboard();
   hideLoading();
 }
@@ -1230,13 +1230,9 @@ export async function bootstrapTrafficDashboard(
     };
 
     __handle = {
-      centerMap,
+      centerMap: centerMapHandler,
       destroy,
-      prevTrafficPage,
-      nextTrafficPage,
       //setTrafficPage,
-      prevIncidentPage,
-      nextIncidentPage,
       //trafficSortHandler,
     };
     return __handle;

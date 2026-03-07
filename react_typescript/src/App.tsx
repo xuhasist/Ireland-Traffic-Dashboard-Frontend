@@ -3,10 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import {
   autoUpdateHandler,
   bootstrapTrafficDashboard,
+  centerMapHandler,
   cityChangeHandler,
   dataModeHandler,
   incidentRoadHandler,
   incidentTypeHandler,
+  nextIncidentPageHandler,
+  nextTrafficPageHandler,
+  prevIncidentPageHandler,
+  prevTrafficPageHandler,
   refreshHandler,
   trafficSortHandler,
   type DashboardHandle,
@@ -169,22 +174,6 @@ export default function App() {
     incidentRoadHandler(query);
   }
 
-  function handleLiveUpdateChange(nextIsLive: boolean) {
-    void dataModeHandler(nextIsLive);
-  }
-
-  function handleAutoUpdateClick() {
-    autoUpdateHandler(isAutoUpdate);
-  }
-
-  function handleRefreshClick() {
-    void refreshHandler();
-  }
-
-  function handleCityChange(city: string) {
-    void cityChangeHandler(city);
-  }
-
   return (
     <>
       <div className={`loading-overlay ${isLoaded ? "" : "active"}`}>
@@ -202,22 +191,19 @@ export default function App() {
           <div className="city-selector">
             <CityDropdown
               currentCity={currentCity}
-              onChange={handleCityChange}
+              onChange={cityChangeHandler}
             />
           </div>
 
           <div className="data-toggle">
-            <NavToggle
-              isLiveUpdate={isLiveUpdate}
-              onChange={handleLiveUpdateChange}
-            />
+            <NavToggle isLiveUpdate={isLiveUpdate} onChange={dataModeHandler} />
           </div>
 
           <div className="nav-buttons">
             <NavButton
               isAutoUpdate={isAutoUpdate}
-              onRefresh={handleRefreshClick}
-              onToggleAutoUpdate={handleAutoUpdateClick}
+              onRefresh={refreshHandler}
+              onToggleAutoUpdate={autoUpdateHandler}
             />
           </div>
         </div>
@@ -235,7 +221,7 @@ export default function App() {
           <div className="section-header">
             <h2>Live Traffic Map</h2>
             <div className="map-controls">
-              <MapButton onCenterMap={() => dashRef.current?.centerMap()} />
+              <MapButton onCenterMap={centerMapHandler} />
             </div>
           </div>
           <div id="map" className="map-container"></div>
@@ -277,8 +263,8 @@ export default function App() {
             page={trafficPage}
             totalPages={trafficTotalPages}
             disabled={trafficLoading}
-            onPrev={() => dashRef.current?.prevTrafficPage()}
-            onNext={() => dashRef.current?.nextTrafficPage()}
+            onPrev={prevTrafficPageHandler}
+            onNext={nextTrafficPageHandler}
           />
         </div>
 
@@ -309,8 +295,8 @@ export default function App() {
             page={incidentPage}
             totalPages={incidentTotalPages}
             disabled={incidentLoading}
-            onPrev={() => dashRef.current?.prevIncidentPage()}
-            onNext={() => dashRef.current?.nextIncidentPage()}
+            onPrev={prevIncidentPageHandler}
+            onNext={nextIncidentPageHandler}
           />
         </div>
       </div>
