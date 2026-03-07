@@ -16,6 +16,7 @@ import {
   TrafficStatus,
   WeatherData,
 } from "../types/domain.js";
+import { OpenWeatherService, TomTomService } from "../services";
 
 // ================================
 // UTILITIES
@@ -291,278 +292,6 @@ function generateMockIncidents(): { results: IncidentStandardFormat[] } {
 // ================================
 // SERVICES
 // ================================
-class TomTomAPI {
-  static API_KEY = "PEooaTjLuccn1ZmqjT25dDIfEIoXaIRh";
-  static BASE_URL = "https://api.tomtom.com/traffic/services";
-
-  static async fetchTrafficFlow(
-    roads: Road[],
-  ): Promise<{ results: (TrafficStandardFormat | null)[] }> {
-    // Fetch each road segment in parallel. If a single request fails, we simply drop that segment.
-    const tasks = roads.map((road) =>
-      this.#fetchFlowForPoint(road.lat, road.lng, road.name),
-    );
-    const results = (await Promise.all(tasks)).filter(Boolean); // Filter out null results
-
-    return { results }; // Return as an object with results array
-  }
-
-  // #fetchFlowForPoint: private method
-  static async #fetchFlowForPoint(
-    lat: number,
-    lng: number,
-    roadName: string,
-  ): Promise<TrafficStandardFormat | null> {
-    const url = `${this.BASE_URL}/4/flowSegmentData/absolute/22/json?point=${lat},${lng}&unit=KMPH&key=${this.API_KEY}`;
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      return this.#convertToStandardFormat(data, lat, lng, roadName);
-    } catch (error) {
-      console.error(
-        `Error fetching traffic flow for point (${lat}, ${lng}):`,
-        error,
-      );
-      return null;
-    }
-  }
-
-  static #convertToStandardFormat(
-    tomtomData: any,
-    lat: number,
-    lng: number,
-    roadName: string,
-  ): TrafficStandardFormat {
-    const flow = tomtomData.flowSegmentData;
-
-    const freeFlow = Number(flow.freeFlowSpeed) || 0; // if null or undefined, set to 0
-    const currentSpeed = Number(flow.currentSpeed) || 0;
-
-    const speedDiff = freeFlow - currentSpeed;
-    const jamFactor = freeFlow > 0 ? (speedDiff / freeFlow) * 10 : 0;
-
-    return {
-      location: {
-        description: roadName,
-        shape: {
-          links: [
-            {
-              points: (() => {
-                // immediately invoked function expression (IIFE)
-                const coordArr = flow?.coordinates?.coordinate;
-                const parsed = Array.isArray(coordArr)
-                  ? coordArr.map((c) => ({
-                      lat: Number(c.latitude),
-                      lng: Number(c.longitude),
-                    }))
-                  : [];
-                // Fallback if API did not return a usable geometry
-                return parsed.length >= 2 ? parsed : [];
-              })(),
-            },
-          ],
-        },
-      },
-      currentFlow: {
-        speed: Math.round(currentSpeed),
-        freeFlow: freeFlow,
-        jamFactor: Number(clamp(Number(jamFactor.toFixed(1)), 0, 10)),
-        //confidence: flow.confidence,
-        traversability: flow.roadClosure ? "closed" : "open",
-      },
-    };
-  }
-
-  static async fetchIncidents(
-    bbox: BBox,
-  ): Promise<{ results: IncidentStandardFormat[] } | null> {
-    const fields =
-      "{incidents{type,geometry{type,coordinates},properties{id,iconCategory,magnitudeOfDelay,events{description,code,iconCategory},startTime,endTime,from,to,length,delay,roadNumbers,timeValidity,probabilityOfOccurrence,numberOfReports,lastReportTime,tmc{countryCode,tableNumber,tableVersion,direction,points{location,offset}}}}}";
-    const url =
-      `${this.BASE_URL}/5/incidentDetails` +
-      `?key=${this.API_KEY}` +
-      `&bbox=${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}` +
-      `&language=en-GB` +
-      `&fields=${fields}`;
-
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      return this.#convertIncidentsToStandardFormat(data);
-    } catch (error) {
-      console.error("Error fetching incidents:", error);
-      return null;
-    }
-  }
-
-  static #convertIncidentsToStandardFormat(tomtomData: any): {
-    results: IncidentStandardFormat[];
-  } {
-    return {
-      results: tomtomData.incidents.map((incident: any) => {
-        const iconCategory = incident.properties.iconCategory;
-        return {
-          incidentDetails: {
-            id: incident.properties.id,
-            type: this.getIncidentType(iconCategory),
-            criticality: this.getSeverityLevel(iconCategory),
-            description: incident.properties.events[0]?.description,
-            startTime: incident.properties.startTime,
-            endTime: incident.properties.endTime,
-          },
-          location: {
-            shape: {
-              links: [
-                {
-                  points: incident.geometry.coordinates.map(
-                    (coord: [number, number]) => ({
-                      lat: coord[1],
-                      lng: coord[0],
-                    }),
-                  ),
-                },
-              ],
-            },
-            description:
-              incident.properties.from + " to " + incident.properties.to,
-          },
-          impact: {
-            delayInSeconds: incident.properties.delay,
-            affectedRoads: incident.properties.roadNumbers,
-          },
-          icon: this.getIncidentIcon(iconCategory),
-        };
-      }),
-    };
-  }
-
-  static getIncidentIcon(iconCategory: number): string {
-    const iconMap: Record<number, string> = {
-      0: "❓", // Unknown
-      1: "💥", // Accident
-      2: "🌫️", // Fog
-      3: "⚠️", // Dangerous Conditions
-      4: "🌧️", // Rain
-      5: "🧊", // Ice
-      6: "⚡", // Jam
-      7: "🚧", // Lane Closed
-      8: "⛔", // Road Closed
-      9: "🏗️", // Road Works
-      10: "💨", // Wind
-      11: "🌊", // Flooding
-      14: "❌", // Broken Down Vehicle
-    };
-
-    return iconMap[iconCategory] ?? "";
-  }
-
-  static getIncidentType(iconCategory: number): string {
-    const typeMap: Record<number, string> = {
-      0: "Unknown",
-      1: "Accident",
-      2: "Fog",
-      3: "Dangerous Conditions",
-      4: "Rain",
-      5: "Ice",
-      6: "Heavy Traffic",
-      7: "Lane Closed",
-      8: "Road Closed",
-      9: "Road Works",
-      10: "Wind",
-      11: "Flooding",
-      14: "Broken Down Vehicle",
-    };
-    return typeMap[iconCategory] ?? "Unknown";
-  }
-
-  static getSeverityLevel(iconCategory: number): string {
-    const typeMap: Record<number, string> = {
-      0: "Unknown",
-      1: "major",
-      2: "moderate",
-      3: "moderate",
-      4: "minor",
-      5: "major",
-      6: "minor",
-      7: "moderate",
-      8: "major",
-      9: "moderate",
-      10: "moderate",
-      11: "major",
-      14: "moderate",
-    };
-    return typeMap[iconCategory] ?? "Unknown";
-  }
-}
-
-class OpenWeatherAPI {
-  static API_KEY = "1970cf6f514f532c6eae6d654ed3d853";
-  static BASE_URL = "https://api.openweathermap.org/data/2.5/weather";
-
-  static async fetchWeather(
-    lat: number,
-    lon: number,
-  ): Promise<WeatherData | null> {
-    const url = `${this.BASE_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${this.API_KEY}`;
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      return {
-        temperature: data.main.temp,
-        description: data.weather[0].description,
-        icon: data.weather[0].icon,
-        dt: data.dt,
-        timezone: data.timezone,
-      };
-    } catch (error) {
-      console.error("Error fetching weather data:", error);
-      return null;
-    }
-  }
-
-  /*
-  static formatTime(timestamp, timezoneOffset = 0) {
-    const date = new Date((timestamp + timezoneOffset) * 1000);
-    const hours = date.getUTCHours().toString().padStart(2, "0");
-    const minutes = date.getUTCMinutes().toString().padStart(2, "0");
-    return `${hours}:${minutes}`;
-  }
-  */
-
-  static getWeatherIcon(iconCode: string): string {
-    const iconMap: Record<string, string> = {
-      "01d": "☀️",
-      "01n": "🌙",
-      "02d": "🌤️",
-      "02n": "☁️",
-      "03d": "☁️",
-      "03n": "☁️",
-      "04d": "☁️",
-      "04n": "☁️",
-      "09d": "🌧️",
-      "09n": "🌧️",
-      "10d": "🌦️",
-      "10n": "🌧️",
-      "11d": "⛈️",
-      "11n": "⛈️",
-      "13d": "❄️",
-      "13n": "❄️",
-      "50d": "🌫️",
-      "50n": "🌫️",
-    };
-    return iconMap[iconCode] ?? "";
-  }
-}
-
 // ========================================
 // MAP FUNCTIONS
 // ========================================
@@ -1065,25 +794,19 @@ async function loadDashboardData() {
 
   const trafficPromise =
     state.dataMode === "live"
-      ? safe(TomTomAPI.fetchTrafficFlow(city.roads), () =>
+      ? safe(TomTomService.fetchTrafficFlow(city.roads), () =>
           generateMockTrafficFlow(),
         )
       : Promise.resolve(generateMockTrafficFlow()); // wrap to Promise
   const incidentsPromise =
     state.dataMode === "live"
-      ? safe(TomTomAPI.fetchIncidents(city.bbox), () => generateMockIncidents())
+      ? safe(TomTomService.fetchIncidents(city.bbox), () =>
+          generateMockIncidents(),
+        )
       : Promise.resolve(generateMockIncidents()); // wrap to Promise
 
-  // Traffic + Incidents
-  /*
-  const [trafficFlow, incidents] = await Promise.all([
-    TomTomAPI.fetchTrafficFlow(dublinRoads),
-    TomTomAPI.fetchIncidents(CONFIG.bbox),
-  ]);
-  */
-
   // async function returns a Promise
-  const weatherPromise = OpenWeatherAPI.fetchWeather(
+  const weatherPromise = OpenWeatherService.fetchWeather(
     city.center[0],
     city.center[1],
   );
