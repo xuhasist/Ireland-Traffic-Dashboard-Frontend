@@ -15,8 +15,11 @@ import {
 } from "../types/domain.js";
 import { OpenWeatherService, TomTomService } from "../services";
 import {
+  buildChartsPayload,
+  buildMetricsPayload,
   mapIncidentsToListItems,
   mapTrafficFlowsToListItems,
+  mapWeatherToViewModel,
 } from "../mappers";
 
 // ================================
@@ -470,60 +473,39 @@ function updateTrafficMap(flowResults: TrafficStandardFormat[]) {
 }
 
 function updateCharts() {
-  if (!state.traffic.data.length) return;
-
-  const timeLabel = formatTimeWithSeconds(CONFIG.timeZone); // get current time label
-
-  const avgSpeed =
-    state.traffic.data.reduce((sum, d) => sum + d.speed, 0) /
-    state.traffic.data.length;
-
-  state.charts.speedTrend.labels?.push(timeLabel);
-  state.charts.speedTrend.data?.push(Number(avgSpeed.toFixed(1)));
-
-  if (
-    (state.charts.speedTrend.labels?.length ?? 0) >
-    CONFIG.charts.speedTrendMaxPoints
-  ) {
-    state.charts.speedTrend.labels?.shift();
-    state.charts.speedTrend.data?.shift();
-  }
-
-  const good = state.traffic.data.filter(
-    (d) => d.jamLevel < CONFIG.thresholds.goodMax,
-  ).length;
-  const moderate = state.traffic.data.filter(
-    (d) =>
-      d.jamLevel >= CONFIG.thresholds.goodMax &&
-      d.jamLevel < CONFIG.thresholds.moderateMax,
-  ).length;
-  const heavy = state.traffic.data.filter(
-    (d) => d.jamLevel >= CONFIG.thresholds.moderateMax,
-  ).length;
-  state.charts.congestion.good = good;
-  state.charts.congestion.moderate = moderate;
-  state.charts.congestion.heavy = heavy;
-
-  opts?.onChartsData?.({
-    speedTrend: {
-      labels: [...state.charts.speedTrend.labels],
-      data: [...state.charts.speedTrend.data],
-      yMax: CONFIG.charts.speedTrendYMax,
-    },
-    congestion: {
-      good: state.charts.congestion.good,
-      moderate: state.charts.congestion.moderate,
-      heavy: state.charts.congestion.heavy,
-    },
+  const chartResult = buildChartsPayload({
+    traffic: state.traffic.data,
+    previousCharts: state.charts,
+    timeLabel: formatTimeWithSeconds(CONFIG.timeZone),
+    goodThreshold: CONFIG.thresholds.goodMax,
+    moderateThreshold: CONFIG.thresholds.moderateMax,
+    maxPoints: CONFIG.charts.speedTrendMaxPoints,
+    yMax: CONFIG.charts.speedTrendYMax,
   });
+
+  if (!chartResult) return;
+
+  state.charts.speedTrend.labels =
+    chartResult.nextChartsState.speedTrend.labels;
+  state.charts.speedTrend.data = chartResult.nextChartsState.speedTrend.data;
+  state.charts.congestion.good = chartResult.nextChartsState.congestion.good;
+  state.charts.congestion.moderate =
+    chartResult.nextChartsState.congestion.moderate;
+  state.charts.congestion.heavy = chartResult.nextChartsState.congestion.heavy;
+
+  opts?.onChartsData?.(chartResult.payload);
 }
 
 // ================================
 // WEATHER WIDGET
 // ================================
 function updateWeatherWidget() {
-  if (!opts?.onWeatherData || !state.weather) return;
-  opts.onWeatherData(state.weather);
+  if (!opts?.onWeatherData) return;
+
+  const weatherViewModel = mapWeatherToViewModel(state.weather);
+  if (!weatherViewModel) return;
+
+  opts.onWeatherData(weatherViewModel);
 }
 
 export async function cityChangeHandler(currentCity: string) {
@@ -537,65 +519,22 @@ export async function cityChangeHandler(currentCity: string) {
 function updateMetricsCards() {
   if (!opts?.onMetricsData) return;
 
-  const traffic = state.traffic.data ?? [];
-  const incidents = state.incidents.data ?? [];
-
   const updatedAt = formatTimeWithSeconds(CONFIG.timeZone);
-
   state.metrics.lastUpdatedAt = updatedAt;
 
-  // Guard
-  if (!traffic.length) return;
-
-  const totalSpeed = traffic.reduce(
-    (sum, d) => sum + (Number(d.speed) || 0),
-    0,
-  );
-
-  const avgSpeed = totalSpeed / traffic.length;
-
-  const congestedRoads = traffic.filter(
-    (d) => Number(d.jamLevel) >= CONFIG.thresholds.moderateMax,
-  ).length;
-
-  const filteredIncidents = getFilteredIncidents();
-
-  const activeIncidentsFiltered = filteredIncidents.length;
-  const activeIncidents = incidents.length;
-
-  const avgTravelTime = congestedRoads * 5; // Example calculation
-
-  const avgJam =
-    traffic.reduce((sum, d) => sum + (Number(d.jamLevel) || 0), 0) /
-    traffic.length;
-  const healthScore = clamp(Math.round(100 - avgJam * 10), 0, 100);
-
-  // Trend vs previous average speed (per refresh)
-  let trendText = "";
-  let trend: MetricsPayload["trend"] = null;
-  if (Number.isFinite(state.metrics.prevAvgSpeed)) {
-    const diff = avgSpeed - (state.metrics.prevAvgSpeed ?? 0);
-    const pct =
-      state.metrics.prevAvgSpeed === 0
-        ? 0
-        : (diff / (state.metrics.prevAvgSpeed ?? 1)) * 100;
-    trendText = `${diff >= 0 ? "▲" : "▼"} ${Math.abs(pct).toFixed(0)}%`;
-    trend = { text: trendText, dir: diff >= 0 ? "up" : "down" };
-  }
-  state.metrics.prevAvgSpeed = avgSpeed;
-
-  opts?.onMetricsData?.({
-    avgSpeed,
-    commuteTime: avgTravelTime,
-    congestedRoads,
-    activeIncidentsFiltered,
-    activeIncidentsTotal: activeIncidents,
-    avgJam,
-    healthScore,
+  const metricsResult = buildMetricsPayload({
+    traffic: state.traffic.data ?? [],
+    incidents: state.incidents.data ?? [],
+    filteredIncidentCount: getFilteredIncidents().length,
     updatedAt,
+    previousAvgSpeed: state.metrics.prevAvgSpeed,
     jamThreshold: CONFIG.thresholds.moderateMax,
-    trend,
   });
+
+  if (!metricsResult) return;
+
+  state.metrics.prevAvgSpeed = metricsResult.nextPrevAvgSpeed;
+  opts?.onMetricsData?.(metricsResult.payload);
 }
 
 // ================================
@@ -717,7 +656,7 @@ async function loadDashboardData() {
     incidentsPromise,
     weatherPromise,
   ]);
-  state.weather = weather;
+  state.weather = mapWeatherToViewModel(weather);
 
   // Transform
   state.traffic.raw = trafficFlow?.results ?? [];
