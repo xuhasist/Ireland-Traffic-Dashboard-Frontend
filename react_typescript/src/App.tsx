@@ -1,18 +1,23 @@
 // src/App.tsx 回傳 JSX 元素插進 #root, 就是 React 產生的 UI(DOM) 結構
 import { useEffect, useMemo, useState } from "react";
 import {
+  attachDashboardUpdaters,
   autoUpdateHandler,
-  bootstrapTrafficDashboard,
   centerMapHandler,
   cityChangeHandler,
   dataModeHandler,
   incidentRoadHandler,
   incidentTypeHandler,
+  initializeDashboardMap,
+  loadPersistedDashboardPreferences,
   nextIncidentPageHandler,
   nextTrafficPageHandler,
   prevIncidentPageHandler,
   prevTrafficPageHandler,
   refreshHandler,
+  runDashboardRefresh,
+  startDashboardAutoUpdate,
+  syncDashboardUiFromState,
   trafficSortHandler,
   destroyTrafficDashboard,
 } from "./legacy/index";
@@ -44,7 +49,6 @@ import MapButton from "./components/MapButton";
 import NavButton from "./components/NavButton";
 import NavToggle from "./components/NavToggle";
 import CityDropdown from "./components/CityDropdown";
-
 
 const initialUiState: UiState = {
   isLoaded: true,
@@ -128,11 +132,7 @@ export default function App() {
       onChartsData: (data: ChartsPayload) => {
         setChartsState({ data, isLoading: false });
       },
-      onTrafficPageData: ({
-        items,
-        page,
-        totalPages,
-      }: TrafficPageData) => {
+      onTrafficPageData: ({ items, page, totalPages }: TrafficPageData) => {
         setTrafficView({
           items,
           page,
@@ -212,9 +212,27 @@ export default function App() {
       },
     };
 
-    bootstrapTrafficDashboard(guardedUpdaters).catch((err) => {
-      console.error("bootstrapTrafficDashboard failed:", err);
-    });
+    attachDashboardUpdaters(guardedUpdaters);
+
+    const initialize = async () => {
+      try {
+        console.log(
+          "Traffic Dashboard Script Loaded: " + new Date().toLocaleString(),
+        );
+        loadPersistedDashboardPreferences();
+        syncDashboardUiFromState();
+        guardedUpdaters.onLoadedChange(false);
+        initializeDashboardMap();
+        await runDashboardRefresh();
+        startDashboardAutoUpdate();
+        guardedUpdaters.onLoadedChange(true);
+      } catch (err) {
+        console.error("Traffic dashboard initialization failed:", err);
+        guardedUpdaters.onLoadedChange(true);
+      }
+    };
+
+    initialize();
 
     return () => {
       alive = false;

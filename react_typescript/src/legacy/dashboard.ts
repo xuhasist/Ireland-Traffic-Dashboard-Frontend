@@ -2,14 +2,12 @@ import L from "leaflet";
 import { CONFIG } from "./config.js";
 import { state } from "./state.js";
 import {
-  BBox,
   ChartsPayload,
   CityConfig,
   IncidentDetails,
   IncidentListItem,
   IncidentStandardFormat,
   MetricsPayload,
-  Road,
   SortOption,
   TrafficListItem,
   TrafficStandardFormat,
@@ -28,15 +26,15 @@ const clamp = (n: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, n)); // limit n between min and max
 
 function showLoading() {
-  if (opts?.onLoadedChange) opts.onLoadedChange(false);
+  opts?.onLoadedChange?.(false);
 }
 function hideLoading() {
-  if (opts?.onLoadedChange) opts.onLoadedChange(true);
+  opts?.onLoadedChange?.(true);
 }
 
 function formatTimeWithSeconds(timeZone: string): string {
   return new Date().toLocaleTimeString("en-GB", {
-    timeZone: timeZone,
+    timeZone,
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -82,20 +80,16 @@ function getCityConfig(): CityConfig {
   return CONFIG.cities[state.cityKey] ?? CONFIG.cities[CONFIG.defaultCity];
 }
 
-function setCity(cityKey: string) {
+function setCity(cityKey: string): void {
   if (!CONFIG.cities[cityKey]) return; // city not found
   state.cityKey = cityKey;
-  if (opts?.onCityChange) opts.onCityChange(state.cityKey);
+  opts?.onCityChange?.(state.cityKey);
 
   // persist selection
   // next time user opens the app, it will load the last selected city
   localStorage.setItem("traffic_dashboard_city", cityKey);
 
-  // Update navbar title
-  const cityName = cityKey;
-  if (!opts?.onNavbarTitle) return;
-  opts.onNavbarTitle(`🚦 ${cityName} Traffic Dashboard`);
-
+  opts?.onNavbarTitle?.(`🚦 ${cityKey} Traffic Dashboard`);
   // Reset paging
   state.traffic.page = 1;
   state.incidents.page = 1;
@@ -118,22 +112,27 @@ function setDataMode(mode: string): void {
   localStorage.setItem("traffic_dashboard_dataMode", state.dataMode);
 }
 
-function syncUIFromState() {
+export function syncDashboardUiFromState(): void {
+  opts?.onCityChange?.(state.cityKey);
+  opts?.onNavbarTitle?.(`🚦 ${state.cityKey} Traffic Dashboard`);
   setLiveUpdate(state.dataMode === "live");
+  opts?.onAutoUpdateChange?.(Boolean(state.autoUpdateTimer));
 }
 
-function setLiveUpdate(isLive: boolean) {
-  if (opts?.onLiveUpdateChange) opts.onLiveUpdateChange(isLive);
+function setLiveUpdate(isLive: boolean): void {
+  opts?.onLiveUpdateChange?.(isLive);
 }
 
 // ================================
 // MOCK DATA GENERATORS
 // ================================
 function generateMockTrafficFlow(): { results: TrafficStandardFormat[] } {
+  const city = getCityConfig();
+
   // 整個function的回傳值
   return {
     // each roads become an object in results array
-    results: getCityConfig().roads.map((road, index) => {
+    results: city.roads.map((road, index) => {
       const jamFactor = parseFloat((Math.random() * 10).toFixed(1));
       const freeFlowSpeed = 50;
 
@@ -278,7 +277,7 @@ function generateMockIncidents(): { results: IncidentStandardFormat[] } {
 // ========================================
 // MAP FUNCTIONS
 // ========================================
-function initializeMap() {
+export function initializeDashboardMap(): void {
   if (state.map) state.map.remove();
 
   const city = getCityConfig();
@@ -376,22 +375,26 @@ export function incidentTypeHandler(type: string) {
 export async function dataModeHandler(isLive: boolean) {
   showLoading();
   setDataMode(isLive ? "live" : "mock");
-  await initializeDashboard();
+  await runDashboardRefresh();
   hideLoading();
 }
 
 export function autoUpdateHandler(isAutoUpdate: boolean): void {
-  toggleAutoUpdate(isAutoUpdate);
+  if (isAutoUpdate) {
+    stopDashboardAutoUpdate();
+    return;
+  }
+  startDashboardAutoUpdate();
 }
 
-export function updateAutoUpdateButton(isRunning: boolean): void {
-  if (opts?.onAutoUpdateChange) opts.onAutoUpdateChange(isRunning);
+function updateAutoUpdateButton(isRunning: boolean): void {
+  opts?.onAutoUpdateChange?.(isRunning);
 }
 
 export async function refreshHandler() {
   showLoading();
   centerMapHandler();
-  await initializeDashboard();
+  await runDashboardRefresh();
   hideLoading();
 }
 
@@ -519,16 +522,15 @@ function updateCharts() {
 // WEATHER WIDGET
 // ================================
 function updateWeatherWidget() {
-  if (!opts?.onWeatherData) return;
-  if (!state.weather) return;
+  if (!opts?.onWeatherData || !state.weather) return;
   opts.onWeatherData(state.weather);
 }
 
 export async function cityChangeHandler(currentCity: string) {
   showLoading();
   setCity(currentCity);
-  initializeMap();
-  await initializeDashboard();
+  initializeDashboardMap();
+  await runDashboardRefresh();
   hideLoading();
 }
 
@@ -592,7 +594,7 @@ function updateMetricsCards() {
     healthScore,
     updatedAt,
     jamThreshold: CONFIG.thresholds.moderateMax,
-    trend: trend,
+    trend,
   });
 }
 
@@ -616,7 +618,6 @@ function renderTrafficLists(applyFilter = false) {
   });
 
   if (applyFilter) setTimeout(addFilterEffect, 0);
-  return;
 }
 
 function addFilterEffect() {
@@ -727,7 +728,9 @@ async function loadDashboardData() {
 // ================================
 // DASHBOARD UPDATE PIPELINE
 // ================================
-async function initializeDashboard({ flashFilter = false } = {}) {
+export async function runDashboardRefresh({
+  flashFilter = false,
+} = {}): Promise<void> {
   // avoid no parameter error
   await loadDashboardData();
   // Draw traffic flow on the map using raw flow segments
@@ -743,81 +746,42 @@ async function initializeDashboard({ flashFilter = false } = {}) {
 // ================================
 // AUTO UPDATE
 // ================================
-function startAutoUpdate() {
+export function startDashboardAutoUpdate(): void {
   if (state.autoUpdateTimer) return;
 
-  state.autoUpdateTimer = setInterval(() => {
-    initializeDashboard();
+  state.autoUpdateTimer = window.setInterval(() => {
+    runDashboardRefresh().catch((err) => {
+      console.error("Dashboard auto refresh failed:", err);
+    });
   }, CONFIG.updateInterval);
 
   updateAutoUpdateButton(true);
 }
 
-function stopAutoUpdate() {
+function stopDashboardAutoUpdate(): void {
   if (!state.autoUpdateTimer) return;
 
   clearInterval(state.autoUpdateTimer);
   state.autoUpdateTimer = null;
-
   updateAutoUpdateButton(false);
 }
 
-function toggleAutoUpdate(isRunning?: boolean) {
-  if (isRunning) stopAutoUpdate();
-  else startAutoUpdate();
+export function attachDashboardUpdaters(o: Options): void {
+  opts = o;
 }
 
-let __bootstrapped = false;
-
-/**
- * Bootstraps the dashboard AFTER React has rendered the HTML.
- * We guard it so hot-reload / double-calls won't register events twice.
- */
-export async function bootstrapTrafficDashboard(o: Options): Promise<void> {
-  opts = o; // assign to outer variable for use in updateMetricsCards
-  if (__bootstrapped) return;
-  // If we crash during bootstrap, we reset this back to false so you can
-  // hot-reload and retry without refreshing the whole page.
-  __bootstrapped = true;
-
-  // HTML 已經被解析完成，DOM Tree 已經建好
-  // 所有 HTML tags 都變成 DOM nodes
-  // getElementById / querySelector 找得到東西
-
-  try {
-    console.log(
-      "Traffic Dashboard Script Loaded: " + new Date().toLocaleString(),
-    );
-
-    // Load persisted preferences
-    const savedCity = localStorage.getItem("traffic_dashboard_city"); // might be null
-    const savedMode = localStorage.getItem("traffic_dashboard_dataMode"); // might be null
-    if (savedCity && CONFIG.cities[savedCity]) state.cityKey = savedCity;
-    if (savedMode === "live" || savedMode === "mock")
-      state.dataMode = savedMode; // including null check
-
-    syncUIFromState();
-    setDataMode(state.dataMode); // update label
-    setCity(state.cityKey); // update title/tooltip + persist
-
-    showLoading();
-    initializeMap();
-    await initializeDashboard();
-    startAutoUpdate();
-    hideLoading();
-  } catch (err) {
-    // If anything throws, keep the page usable and visible.
-    console.error("Legacy dashboard bootstrap failed:", err);
-    hideLoading();
-    __bootstrapped = false;
-    throw err;
-  }
+export function loadPersistedDashboardPreferences(): void {
+  // Load persisted preferences
+  const savedCity = localStorage.getItem("traffic_dashboard_city"); // might be null
+  const savedMode = localStorage.getItem("traffic_dashboard_dataMode"); // might be null
+  if (savedCity && CONFIG.cities[savedCity]) state.cityKey = savedCity;
+  if (savedMode === "live" || savedMode === "mock") state.dataMode = savedMode; // including null check
 }
 
 export function destroyTrafficDashboard(): void {
   // Stop periodic updates
   try {
-    stopAutoUpdate();
+    stopDashboardAutoUpdate();
   } catch {}
 
   state.charts.speedTrend.labels = [];
@@ -831,5 +795,5 @@ export function destroyTrafficDashboard(): void {
   } catch {}
 
   state.map = null;
-  __bootstrapped = false;
+  opts = null;
 }
