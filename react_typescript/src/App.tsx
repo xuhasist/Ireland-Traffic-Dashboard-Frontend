@@ -1,42 +1,3 @@
-// src/App.tsx 回傳 JSX 元素插進 #root, 就是 React 產生的 UI(DOM) 結構
-import { useEffect, useMemo, useState } from "react";
-import {
-  attachDashboardUpdaters,
-  autoUpdateHandler,
-  centerMapHandler,
-  cityChangeHandler,
-  dataModeHandler,
-  incidentRoadHandler,
-  incidentTypeHandler,
-  initializeDashboardMap,
-  loadPersistedDashboardPreferences,
-  nextIncidentPageHandler,
-  nextTrafficPageHandler,
-  prevIncidentPageHandler,
-  prevTrafficPageHandler,
-  refreshHandler,
-  runDashboardRefresh,
-  startDashboardAutoUpdate,
-  syncDashboardUiFromState,
-  trafficSortHandler,
-  destroyTrafficDashboard,
-} from "./legacy/index";
-import {
-  AsyncSectionState,
-  ChartsPayload,
-  DashboardUpdaters,
-  FilterState,
-  IncidentListItem,
-  IncidentPageData,
-  IncidentViewState,
-  MetricsPayload,
-  SortOption,
-  TrafficListItem,
-  TrafficPageData,
-  TrafficViewState,
-  UiState,
-  WeatherData,
-} from "./types";
 import TrafficItems from "./components/TrafficItems";
 import TrafficFilter from "./components/TrafficFilter";
 import IncidentItems from "./components/IncidentItems";
@@ -49,211 +10,19 @@ import MapButton from "./components/MapButton";
 import NavButton from "./components/NavButton";
 import NavToggle from "./components/NavToggle";
 import CityDropdown from "./components/CityDropdown";
-
-const initialUiState: UiState = {
-  isLoaded: true,
-  isAutoUpdate: true,
-  isLiveUpdate: false,
-  currentCity: null,
-  navbarTitle: "🚦 Traffic Dashboard",
-};
-
-const initialFilterState: FilterState = {
-  selectedTrafficSort: "worst",
-  selectedIncidentType: "all",
-  incidentRoadQuery: "",
-};
-
-const initialWeatherState: AsyncSectionState<WeatherData> = {
-  data: null,
-  isLoading: true,
-};
-
-const initialMetricsState: AsyncSectionState<MetricsPayload> = {
-  data: null,
-  isLoading: true,
-};
-
-const initialChartsState: AsyncSectionState<ChartsPayload> = {
-  data: null,
-  isLoading: true,
-};
-
-const initialTrafficViewState: TrafficViewState = {
-  items: [],
-  isLoading: true,
-  page: 1,
-  totalPages: 1,
-};
-
-const initialIncidentViewState: IncidentViewState = {
-  count: 0,
-  items: [],
-  allItems: [],
-  isLoading: true,
-  page: 1,
-  totalPages: 1,
-};
+import { useTrafficDashboard } from "./hooks/useTrafficDashboard";
 
 export default function App() {
-  const [uiState, setUiState] = useState(initialUiState);
-  const [filterState, setFilterState] = useState(initialFilterState);
-  const [weatherState, setWeatherState] = useState(initialWeatherState);
-  const [metricsState, setMetricsState] = useState(initialMetricsState);
-  const [chartsState, setChartsState] = useState(initialChartsState);
-  const [trafficView, setTrafficView] = useState(initialTrafficViewState);
-  const [incidentView, setIncidentView] = useState(initialIncidentViewState);
-
-  // the reason using useMemo is to avoid re-creating the updaters object on every render
-  const dashboardUpdaters = useMemo(
-    (): DashboardUpdaters => ({
-      onLoadedChange: (loaded: boolean) => {
-        // only update isLoaded
-        setUiState((prev) => ({ ...prev, isLoaded: loaded }));
-      },
-      onAutoUpdateChange: (isAuto: boolean) => {
-        setUiState((prev) => ({ ...prev, isAutoUpdate: isAuto }));
-      },
-      onLiveUpdateChange: (isLive: boolean) => {
-        setUiState((prev) => ({ ...prev, isLiveUpdate: isLive }));
-      },
-      onNavbarTitle: (title: string) => {
-        setUiState((prev) => ({ ...prev, navbarTitle: title }));
-      },
-      onCityChange: (city: string) => {
-        setUiState((prev) => ({ ...prev, currentCity: city }));
-      },
-      onWeatherData: (data: WeatherData) => {
-        setWeatherState({ data, isLoading: false });
-      },
-      onMetricsData: (data: MetricsPayload) => {
-        setMetricsState({ data, isLoading: false });
-      },
-      onChartsData: (data: ChartsPayload) => {
-        setChartsState({ data, isLoading: false });
-      },
-      onTrafficPageData: ({ items, page, totalPages }: TrafficPageData) => {
-        setTrafficView({
-          items,
-          page,
-          totalPages,
-          isLoading: false,
-        });
-      },
-      onIncidentsCountChange: (count: number) => {
-        setIncidentView((prev) => ({ ...prev, count }));
-      },
-      onIncidentPageData: ({
-        items,
-        allItems,
-        page,
-        totalPages,
-      }: IncidentPageData) => {
-        setIncidentView((prev) => ({
-          ...prev,
-          items,
-          allItems,
-          page,
-          totalPages,
-          isLoading: false,
-        }));
-      },
-    }),
-    [],
-  );
-
-  useEffect(() => {
-    let alive = true;
-
-    const guardedUpdaters = {
-      onLoadedChange: (loaded: boolean) => {
-        if (!alive) return;
-        dashboardUpdaters.onLoadedChange(loaded);
-      },
-      onAutoUpdateChange: (isAuto: boolean) => {
-        if (!alive) return;
-        dashboardUpdaters.onAutoUpdateChange(isAuto);
-      },
-      onLiveUpdateChange: (isLive: boolean) => {
-        if (!alive) return;
-        dashboardUpdaters.onLiveUpdateChange(isLive);
-      },
-      onNavbarTitle: (title: string) => {
-        if (!alive) return;
-        dashboardUpdaters.onNavbarTitle(title);
-      },
-      onCityChange: (city: string) => {
-        if (!alive) return;
-        dashboardUpdaters.onCityChange(city);
-      },
-      onWeatherData: (data: WeatherData) => {
-        if (!alive) return;
-        dashboardUpdaters.onWeatherData(data);
-      },
-      onMetricsData: (data: MetricsPayload) => {
-        if (!alive) return;
-        dashboardUpdaters.onMetricsData(data);
-      },
-      onChartsData: (data: ChartsPayload) => {
-        if (!alive) return;
-        dashboardUpdaters.onChartsData(data);
-      },
-      onTrafficPageData: (payload: TrafficPageData) => {
-        if (!alive) return;
-        dashboardUpdaters.onTrafficPageData(payload);
-      },
-      onIncidentsCountChange: (count: number) => {
-        if (!alive) return;
-        dashboardUpdaters.onIncidentsCountChange(count);
-      },
-      onIncidentPageData: (payload: IncidentPageData) => {
-        if (!alive) return;
-        dashboardUpdaters.onIncidentPageData(payload);
-      },
-    };
-
-    attachDashboardUpdaters(guardedUpdaters);
-
-    const initialize = async () => {
-      try {
-        console.log(
-          "Traffic Dashboard Script Loaded: " + new Date().toLocaleString(),
-        );
-        loadPersistedDashboardPreferences();
-        syncDashboardUiFromState();
-        guardedUpdaters.onLoadedChange(false);
-        initializeDashboardMap();
-        await runDashboardRefresh();
-        startDashboardAutoUpdate();
-        guardedUpdaters.onLoadedChange(true);
-      } catch (err) {
-        console.error("Traffic dashboard initialization failed:", err);
-        guardedUpdaters.onLoadedChange(true);
-      }
-    };
-
-    initialize();
-
-    return () => {
-      alive = false;
-      destroyTrafficDashboard();
-    };
-  }, [dashboardUpdaters]);
-
-  function handleTrafficSortChange(sortBy: SortOption) {
-    setFilterState((prev) => ({ ...prev, selectedTrafficSort: sortBy }));
-    trafficSortHandler(sortBy);
-  }
-
-  function handleIncidentTypeChange(type: string) {
-    setFilterState((prev) => ({ ...prev, selectedIncidentType: type }));
-    incidentTypeHandler(type);
-  }
-
-  function handleIncidentRoadChange(query: string) {
-    setFilterState((prev) => ({ ...prev, incidentRoadQuery: query }));
-    incidentRoadHandler(query);
-  }
+  const {
+    uiState,
+    filterState,
+    weatherState,
+    metricsState,
+    chartsState,
+    trafficView,
+    incidentView,
+    actions,
+  } = useTrafficDashboard();
 
   return (
     <>
@@ -274,22 +43,22 @@ export default function App() {
           <div className="city-selector">
             <CityDropdown
               currentCity={uiState.currentCity}
-              onChange={cityChangeHandler}
+              onChange={actions.onCityChange}
             />
           </div>
 
           <div className="data-toggle">
             <NavToggle
               isLiveUpdate={uiState.isLiveUpdate}
-              onChange={dataModeHandler}
+              onChange={actions.onDataModeChange}
             />
           </div>
 
           <div className="nav-buttons">
             <NavButton
               isAutoUpdate={uiState.isAutoUpdate}
-              onRefresh={refreshHandler}
-              onToggleAutoUpdate={autoUpdateHandler}
+              onRefresh={actions.onRefresh}
+              onToggleAutoUpdate={actions.onToggleAutoUpdate}
             />
           </div>
         </div>
@@ -307,7 +76,7 @@ export default function App() {
           <div className="section-header">
             <h2>Live Traffic Map</h2>
             <div className="map-controls">
-              <MapButton onCenterMap={centerMapHandler} />
+              <MapButton onCenterMap={actions.onCenterMap} />
             </div>
           </div>
           <div id="map" className="map-container"></div>
@@ -335,7 +104,7 @@ export default function App() {
             <div className="traffic-controls">
               <TrafficFilter
                 selectedSort={filterState.selectedTrafficSort}
-                onChange={handleTrafficSortChange}
+                onChange={actions.onTrafficSortChange}
               />
             </div>
           </div>
@@ -350,8 +119,8 @@ export default function App() {
             page={trafficView.page}
             totalPages={trafficView.totalPages}
             disabled={trafficView.isLoading}
-            onPrev={prevTrafficPageHandler}
-            onNext={nextTrafficPageHandler}
+            onPrev={actions.onPrevTrafficPage}
+            onNext={actions.onNextTrafficPage}
           />
         </div>
 
@@ -368,8 +137,8 @@ export default function App() {
                 incidents={incidentView.allItems}
                 selectedType={filterState.selectedIncidentType}
                 roadQuery={filterState.incidentRoadQuery}
-                onTypeChange={handleIncidentTypeChange}
-                onRoadQueryChange={handleIncidentRoadChange}
+                onTypeChange={actions.onIncidentTypeChange}
+                onRoadQueryChange={actions.onIncidentRoadChange}
               />
             </div>
           </div>
@@ -384,8 +153,8 @@ export default function App() {
             page={incidentView.page}
             totalPages={incidentView.totalPages}
             disabled={incidentView.isLoading}
-            onPrev={prevIncidentPageHandler}
-            onNext={nextIncidentPageHandler}
+            onPrev={actions.onPrevIncidentPage}
+            onNext={actions.onNextIncidentPage}
           />
         </div>
       </div>
