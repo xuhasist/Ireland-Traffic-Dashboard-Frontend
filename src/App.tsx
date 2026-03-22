@@ -12,6 +12,7 @@ import NavButton from "./components/NavButton";
 import NavToggle from "./components/NavToggle";
 import CityDropdown from "./components/CityDropdown";
 import { useTrafficDashboard } from "./hooks/useTrafficDashboard";
+import LoadingOverlay from "./components/LoadingOverlay";
 
 export default function App() {
   const {
@@ -28,10 +29,7 @@ export default function App() {
 
   return (
     <>
-      <div className={`loading-overlay ${uiState.isLoaded ? "" : "active"}`}>
-        <div className="spinner"></div>
-        <p>Loading traffic data...</p>
-      </div>
+      <LoadingOverlay isLoaded={uiState.isLoaded} />
 
       <nav className="navbar">
         <h1>{uiState.navbarTitle}</h1>
