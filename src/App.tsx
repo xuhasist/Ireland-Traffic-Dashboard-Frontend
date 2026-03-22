@@ -13,6 +13,7 @@ import NavToggle from "./components/NavToggle";
 import CityDropdown from "./components/CityDropdown";
 import { useTrafficDashboard } from "./hooks/useTrafficDashboard";
 import LoadingOverlay from "./components/LoadingOverlay";
+import MapLegend from "./components/MapLegend";
 
 export default function App() {
   const {
@@ -81,20 +82,7 @@ export default function App() {
             </div>
           </div>
           <div id="map" className="map-container"></div>
-          <div className="map-legend">
-            <div className="legend-item">
-              <span className="legend-color good"></span>
-              <span>Good (0-4)</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-color moderate"></span>
-              <span>Moderate (4-7)</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-color heavy"></span>
-              <span>Heavy (7-10)</span>
-            </div>
-          </div>
+          <MapLegend />
         </div>
 
         <Charts data={chartsState.data} isLoading={chartsState.isLoading} />
