@@ -34,6 +34,7 @@ import type {
   UiState,
   WeatherData,
 } from "../types";
+import { CONFIG } from "../legacy/config";
 
 const initialUiState: UiState = {
   isLoaded: true,
@@ -79,6 +80,8 @@ const initialIncidentViewState: IncidentViewState = {
   page: 1,
   totalPages: 1,
 };
+
+const cities = Object.keys(CONFIG.cities);
 
 export function useTrafficDashboard() {
   const [uiState, setUiState] = useState(initialUiState);
@@ -225,7 +228,7 @@ export function useTrafficDashboard() {
     };
   }, [dashboardUpdaters]);
 
-  // use useCallback to memorize the function references, 
+  // use useCallback to memorize the function references,
   // so that we don't re-create the handlers on every render
   const handleTrafficSortChange = useCallback((sortBy: SortOption) => {
     setFilterState((prev) => ({ ...prev, selectedTrafficSort: sortBy }));
@@ -250,6 +253,7 @@ export function useTrafficDashboard() {
     chartsState,
     trafficView,
     incidentView,
+    cities,
 
     actions: {
       onCityChange: cityChangeHandler,

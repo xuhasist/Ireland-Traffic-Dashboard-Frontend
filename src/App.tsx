@@ -1,3 +1,4 @@
+// App.tsx 盡量只負責組畫面，資料準備都交給 hook
 import TrafficItems from "./components/TrafficItems";
 import TrafficFilter from "./components/TrafficFilter";
 import IncidentItems from "./components/IncidentItems";
@@ -21,6 +22,7 @@ export default function App() {
     chartsState,
     trafficView,
     incidentView,
+    cities,
     actions,
   } = useTrafficDashboard();
 
@@ -44,6 +46,7 @@ export default function App() {
             <CityDropdown
               currentCity={uiState.currentCity}
               onChange={actions.onCityChange}
+              cities={cities}
             />
           </div>
 

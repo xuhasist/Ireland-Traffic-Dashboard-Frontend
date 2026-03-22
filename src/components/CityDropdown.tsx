@@ -1,14 +1,17 @@
-import { CONFIG } from "../legacy/config";
+//import { CONFIG } from "../legacy/config";
+//component 只負責 render，state 由父 component 管理
 
 type Props = {
   currentCity: string | null;
   onChange: (city: string) => void;
+  cities: string[];
 };
 
-export default function CityDropdown({ currentCity, onChange }: Props) {
+export default function CityDropdown({ currentCity, onChange, cities }: Props) {
   if (!currentCity) return null;
 
-  const cities = Object.keys(CONFIG.cities);
+  //const cities = Object.keys(CONFIG.cities);
+  //["Dublin", "Cork", "Galway", "Limerick", "Waterford"]
 
   return (
     <>
