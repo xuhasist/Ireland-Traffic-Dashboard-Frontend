@@ -35,6 +35,7 @@ import type {
   WeatherData,
 } from "../types";
 import { CONFIG } from "../legacy/config";
+import { CityService } from "../services";
 
 const initialUiState: UiState = {
   isLoaded: true,
@@ -81,7 +82,8 @@ const initialIncidentViewState: IncidentViewState = {
   totalPages: 1,
 };
 
-const cities = Object.keys(CONFIG.cities);
+// if API call fails, use data from config
+const fallbackCities = Object.keys(CONFIG.cities); // ["Dublin", "Cork", "Galway"]
 
 export function useTrafficDashboard() {
   const [uiState, setUiState] = useState(initialUiState);
@@ -91,6 +93,7 @@ export function useTrafficDashboard() {
   const [chartsState, setChartsState] = useState(initialChartsState);
   const [trafficView, setTrafficView] = useState(initialTrafficViewState);
   const [incidentView, setIncidentView] = useState(initialIncidentViewState);
+  const [cities, setCities] = useState<string[]>(fallbackCities); // initially use fallbackCities
 
   // the reason using useMemo is to avoid re-creating the updaters object on every render
   const dashboardUpdaters = useMemo(
@@ -207,6 +210,11 @@ export function useTrafficDashboard() {
         console.log(
           "Traffic Dashboard Script Loaded: " + new Date().toLocaleString(),
         );
+        const backendCities = await CityService.fetchCities();
+        if (backendCities.length > 0) {
+          setCities(backendCities);
+        }
+
         loadPersistedDashboardPreferences();
         syncDashboardUiFromState();
         guardedUpdaters.onLoadedChange(false);
@@ -226,7 +234,7 @@ export function useTrafficDashboard() {
       alive = false;
       destroyTrafficDashboard();
     };
-  }, [dashboardUpdaters]);
+  }, [dashboardUpdaters]); // if dashboardUpdaters updates, all effect logic will redo
 
   // use useCallback to memorize the function references,
   // so that we don't re-create the handlers on every render
