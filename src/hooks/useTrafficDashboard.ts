@@ -19,6 +19,7 @@ import {
   startDashboardAutoUpdate,
   syncDashboardUiFromState,
   trafficSortHandler,
+  setDashboardCityConfigs,
 } from "../legacy";
 import type {
   AsyncSectionState,
@@ -35,7 +36,7 @@ import type {
   WeatherData,
 } from "../types";
 import { CONFIG } from "../legacy/config";
-import { CityService } from "../services";
+import { CityService, CityConfigService } from "../services";
 
 const initialUiState: UiState = {
   isLoaded: true,
@@ -214,6 +215,9 @@ export function useTrafficDashboard() {
         if (backendCities.length > 0) {
           setCities(backendCities);
         }
+
+        const backendCityConfigs = await CityConfigService.fetchCityConfigs();
+        setDashboardCityConfigs(backendCityConfigs);
 
         loadPersistedDashboardPreferences();
         syncDashboardUiFromState();

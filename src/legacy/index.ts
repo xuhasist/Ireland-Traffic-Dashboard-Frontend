@@ -18,4 +18,5 @@ export {
   syncDashboardUiFromState,
   trafficSortHandler,
   destroyTrafficDashboard,
+  setDashboardCityConfigs,
 } from "./dashboard";

@@ -75,16 +75,25 @@ type Options = {
 
 let opts: Options | null = null;
 
+// let means the variable can be reassigned later
+// Record<string, CityConfig> means an object with string keys and CityConfig values
+// shallow copy of CONFIG.cities to allow runtime updates without mutating original config
+let runtimeCityConfigs: Record<string, CityConfig> = { ...CONFIG.cities };
+let runtimeDefaultCityKey = CONFIG.defaultCity;
+
 // ================================
 // CITY & DATA MODE HELPERS
 // ================================
 function getCityConfig(): CityConfig {
-  // if cityKey not found, return default city config
-  return CONFIG.cities[state.cityKey] ?? CONFIG.cities[CONFIG.defaultCity];
+  return (
+    runtimeCityConfigs[state.cityKey] ??
+    runtimeCityConfigs[runtimeDefaultCityKey] ??
+    CONFIG.cities[CONFIG.defaultCity]
+  );
 }
 
 function setCity(cityKey: string): void {
-  if (!CONFIG.cities[cityKey]) return; // city not found
+  if (!runtimeCityConfigs[cityKey]) return; // city not found
   state.cityKey = cityKey;
   opts?.onCityChange?.(state.cityKey);
 
@@ -124,6 +133,28 @@ export function syncDashboardUiFromState(): void {
 
 function setLiveUpdate(isLive: boolean): void {
   opts?.onLiveUpdateChange?.(isLive);
+}
+
+export function setDashboardCityConfigs(
+  configs: Record<string, CityConfig>,
+): void {
+  if (Object.keys(configs).length === 0) return;
+
+  // Merge new configs into runtimeCityConfigs
+  // 部分資料被backend覆蓋，其他維持原本設定（例如預設城市）
+  runtimeCityConfigs = {
+    ...runtimeCityConfigs,
+    ...configs,
+  };
+
+  if (!runtimeCityConfigs[runtimeDefaultCityKey]) {
+    runtimeDefaultCityKey =
+      Object.keys(runtimeCityConfigs)[0] ?? CONFIG.defaultCity;
+  }
+
+  if (!runtimeCityConfigs[state.cityKey]) {
+    state.cityKey = runtimeDefaultCityKey;
+  }
 }
 
 // ================================
@@ -713,7 +744,7 @@ export function loadPersistedDashboardPreferences(): void {
   // Load persisted preferences
   const savedCity = localStorage.getItem("traffic_dashboard_city"); // might be null
   const savedMode = localStorage.getItem("traffic_dashboard_dataMode"); // might be null
-  if (savedCity && CONFIG.cities[savedCity]) state.cityKey = savedCity;
+  if (savedCity && runtimeCityConfigs[savedCity]) state.cityKey = savedCity;
   if (savedMode === "live" || savedMode === "mock") state.dataMode = savedMode; // including null check
 }
 

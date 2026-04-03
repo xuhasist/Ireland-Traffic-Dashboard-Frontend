@@ -20,7 +20,8 @@ export type DashboardState = {
   };
   autoUpdateTimer: number | null;
   sort: SortOption;
-  cityKey: keyof typeof CONFIG.cities;
+  //cityKey: keyof typeof CONFIG.cities;
+  cityKey: string;
   dataMode: DataMode; // "mock" | "live"
   metrics: {
     prevAvgSpeed: number | null;
