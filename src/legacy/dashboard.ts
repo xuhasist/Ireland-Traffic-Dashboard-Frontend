@@ -13,7 +13,11 @@ import {
   TrafficStandardFormat,
   WeatherData,
 } from "../types/domain.js";
-import { OpenWeatherService, TomTomService } from "../services";
+import {
+  OpenWeatherService,
+  TomTomService,
+  DashboardSnapshotService,
+} from "../services";
 import {
   buildChartsPayload,
   buildMetricsPayload,
@@ -80,6 +84,9 @@ let opts: Options | null = null;
 // shallow copy of CONFIG.cities to allow runtime updates without mutating original config
 let runtimeCityConfigs: Record<string, CityConfig> = { ...CONFIG.cities };
 let runtimeDefaultCityKey = CONFIG.defaultCity;
+
+let lastMetricsPayload: MetricsPayload | null = null;
+let lastChartsPayload: ChartsPayload | null = null;
 
 // ================================
 // CITY & DATA MODE HELPERS
@@ -524,6 +531,7 @@ function updateCharts() {
     chartResult.nextChartsState.congestion.moderate;
   state.charts.congestion.heavy = chartResult.nextChartsState.congestion.heavy;
 
+  lastChartsPayload = chartResult.payload;
   opts?.onChartsData?.(chartResult.payload);
 }
 
@@ -565,6 +573,7 @@ function updateMetricsCards() {
   if (!metricsResult) return;
 
   state.metrics.prevAvgSpeed = metricsResult.nextPrevAvgSpeed;
+  lastMetricsPayload = metricsResult.payload;
   opts?.onMetricsData?.(metricsResult.payload);
 }
 
@@ -695,6 +704,21 @@ async function loadDashboardData() {
   state.incidents.data = mapIncidentsToListItems(incidents?.results ?? []);
 }
 
+async function saveDashboardSnapshot() {
+  if (!lastChartsPayload) return;
+
+  await DashboardSnapshotService.saveSnapshot({
+    city: state.cityKey,
+    dataMode: state.dataMode,
+    trafficCount: state.traffic.data.length,
+    incidentCount: getFilteredIncidents().length,
+    generatedAt: new Date().toISOString(),
+    weather: state.weather,
+    metrics: lastMetricsPayload,
+    congestion: lastChartsPayload.congestion,
+  });
+}
+
 // ================================
 // DASHBOARD UPDATE PIPELINE
 // ================================
@@ -711,6 +735,7 @@ export async function runDashboardRefresh({
   updateCharts();
   renderTrafficLists(flashFilter);
   renderIncidentsLists();
+  await saveDashboardSnapshot();
 }
 
 // ================================
