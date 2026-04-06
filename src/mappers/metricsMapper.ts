@@ -1,3 +1,4 @@
+/*
 import type {
   IncidentListItem,
   MetricsPayload,
@@ -75,3 +76,4 @@ export function buildMetricsPayload({
     nextPrevAvgSpeed: avgSpeed,
   };
 }
+*/

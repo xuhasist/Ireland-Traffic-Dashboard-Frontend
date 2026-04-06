@@ -34,6 +34,7 @@ export type DashboardState = {
   };
   incidents: {
     data: IncidentListItem[];
+    raw: IncidentStandardFormat[];
     page: number;
     filters: {
       type: string; // e.g. "all", "accident", "construction"
@@ -72,6 +73,7 @@ export const state = {
   },
   incidents: {
     data: [],
+    raw: [],
     page: 1,
     filters: {
       type: "all",

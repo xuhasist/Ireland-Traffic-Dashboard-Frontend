@@ -17,10 +17,10 @@ import {
   OpenWeatherService,
   TomTomService,
   DashboardSnapshotService,
+  DashboardSummaryService,
 } from "../services";
 import {
   buildChartsPayload,
-  buildMetricsPayload,
   mapIncidentsToListItems,
   mapTrafficFlowsToListItems,
   mapWeatherToViewModel,
@@ -399,18 +399,18 @@ export function trafficSortHandler(sortBy: SortOption) {
   state.sort = sortBy;
 }
 
-export function incidentRoadHandler(query: string) {
+export async function incidentRoadHandler(query: string) {
   state.incidents.filters.roadQuery = query;
   state.incidents.page = 1;
   renderIncidentsLists();
-  updateMetricsCards();
+  await updateMetricsCards();
 }
 
-export function incidentTypeHandler(type: string) {
+export async function incidentTypeHandler(type: string) {
   state.incidents.filters.type = type;
   state.incidents.page = 1;
   renderIncidentsLists();
-  updateMetricsCards();
+  await updateMetricsCards();
 }
 
 export async function dataModeHandler(isLive: boolean) {
@@ -555,26 +555,41 @@ export async function cityChangeHandler(currentCity: string) {
   hideLoading();
 }
 
-function updateMetricsCards() {
+async function updateMetricsCards() {
   if (!opts?.onMetricsData) return;
 
   const updatedAt = formatTimeWithSeconds(CONFIG.timeZone);
   state.metrics.lastUpdatedAt = updatedAt;
 
-  const metricsResult = buildMetricsPayload({
-    traffic: state.traffic.data ?? [],
-    incidents: state.incidents.data ?? [],
+  const summaryResponse = await DashboardSummaryService.fetchSummary({
+    traffic: state.traffic.raw ?? [],
+    incidents: state.incidents.raw ?? [],
     filteredIncidentCount: getFilteredIncidents().length,
     updatedAt,
     previousAvgSpeed: state.metrics.prevAvgSpeed,
     jamThreshold: CONFIG.thresholds.moderateMax,
   });
 
-  if (!metricsResult) return;
+  if (!summaryResponse) return;
 
-  state.metrics.prevAvgSpeed = metricsResult.nextPrevAvgSpeed;
-  lastMetricsPayload = metricsResult.payload;
-  opts?.onMetricsData?.(metricsResult.payload);
+  const summary = summaryResponse.data;
+
+  const metricsPayload = {
+    avgSpeed: summary.avgSpeedKph,
+    commuteTime: summary.commuteTimeMinutes,
+    congestedRoads: summary.congestedRoadCount,
+    activeIncidentsFiltered: summary.activeIncidentCount,
+    activeIncidentsTotal: (state.incidents.data ?? []).length,
+    avgJam: summary.avgJamFactor,
+    healthScore: summary.healthScore,
+    updatedAt: summary.updatedAt,
+    jamThreshold: summary.jamThreshold,
+    trend: summary.trend,
+  };
+
+  state.metrics.prevAvgSpeed = summary.avgSpeedKph;
+  lastMetricsPayload = metricsPayload;
+  opts.onMetricsData(metricsPayload);
 }
 
 // ================================
@@ -701,7 +716,8 @@ async function loadDashboardData() {
   // Transform
   state.traffic.raw = trafficFlow?.results ?? [];
   state.traffic.data = mapTrafficFlowsToListItems(state.traffic.raw);
-  state.incidents.data = mapIncidentsToListItems(incidents?.results ?? []);
+  state.incidents.raw = incidents?.results ?? [];
+  state.incidents.data = mapIncidentsToListItems(state.incidents.raw);
 }
 
 async function saveDashboardSnapshot() {
@@ -731,7 +747,7 @@ export async function runDashboardRefresh({
   updateTrafficMap(state.traffic.raw);
   sortTrafficData(state.sort);
   updateWeatherWidget();
-  updateMetricsCards();
+  await updateMetricsCards();
   updateCharts();
   renderTrafficLists(flashFilter);
   renderIncidentsLists();
