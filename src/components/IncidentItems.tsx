@@ -19,7 +19,7 @@ export default function IncidentItems({ items, isLoading }: Props) {
             <div className="incident-type">{item.type}</div>
             <div className="incident-location">{item.location}</div>
             <div className="incident-time">
-              {item.time} • {item.delay} min delay
+              {item.time} • {item.delay}
             </div>
           </div>
         </div>

@@ -18,9 +18,9 @@ import {
   TomTomService,
   DashboardSnapshotService,
   DashboardSummaryService,
+  DashboardChartsService,
 } from "../services";
 import {
-  buildChartsPayload,
   mapIncidentsToListItems,
   mapTrafficFlowsToListItems,
   mapWeatherToViewModel,
@@ -510,10 +510,13 @@ function updateTrafficMap(flowResults: TrafficStandardFormat[]) {
   });
 }
 
-function updateCharts() {
-  const chartResult = buildChartsPayload({
-    traffic: state.traffic.data,
-    previousCharts: state.charts,
+async function updateCharts() {
+  const chartsResponse = await DashboardChartsService.fetchCharts({
+    traffic: state.traffic.raw ?? [],
+    previousSpeedTrend: state.charts.speedTrend.labels.map((label, index) => ({
+      label,
+      avgSpeedKph: state.charts.speedTrend.data[index] ?? 0,
+    })),
     timeLabel: formatTimeWithSeconds(CONFIG.timeZone),
     goodThreshold: CONFIG.thresholds.goodMax,
     moderateThreshold: CONFIG.thresholds.moderateMax,
@@ -521,18 +524,34 @@ function updateCharts() {
     yMax: CONFIG.charts.speedTrendYMax,
   });
 
-  if (!chartResult) return;
+  if (!chartsResponse) return;
 
-  state.charts.speedTrend.labels =
-    chartResult.nextChartsState.speedTrend.labels;
-  state.charts.speedTrend.data = chartResult.nextChartsState.speedTrend.data;
-  state.charts.congestion.good = chartResult.nextChartsState.congestion.good;
-  state.charts.congestion.moderate =
-    chartResult.nextChartsState.congestion.moderate;
-  state.charts.congestion.heavy = chartResult.nextChartsState.congestion.heavy;
+  const charts = chartsResponse.data;
 
-  lastChartsPayload = chartResult.payload;
-  opts?.onChartsData?.(chartResult.payload);
+  state.charts.speedTrend.labels = charts.speedTrend.map(
+    (point) => point.label,
+  );
+  state.charts.speedTrend.data = charts.speedTrend.map(
+    (point) => point.avgSpeedKph,
+  );
+  state.charts.congestion.good = charts.congestion.good;
+  state.charts.congestion.moderate = charts.congestion.moderate;
+  state.charts.congestion.heavy = charts.congestion.heavy;
+
+  lastChartsPayload = {
+    speedTrend: {
+      labels: [...state.charts.speedTrend.labels],
+      data: [...state.charts.speedTrend.data],
+      yMax: charts.yMax,
+    },
+    congestion: {
+      good: charts.congestion.good,
+      moderate: charts.congestion.moderate,
+      heavy: charts.congestion.heavy,
+    },
+  };
+
+  opts?.onChartsData?.(lastChartsPayload);
 }
 
 // ================================
@@ -748,7 +767,7 @@ export async function runDashboardRefresh({
   sortTrafficData(state.sort);
   updateWeatherWidget();
   await updateMetricsCards();
-  updateCharts();
+  await updateCharts();
   renderTrafficLists(flashFilter);
   renderIncidentsLists();
   await saveDashboardSnapshot();

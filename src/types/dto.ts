@@ -144,6 +144,7 @@ export type CongestionBreakdownDto = {
 export type DashboardChartsDto = {
   speedTrend: SpeedTrendPointDto[];
   congestion: CongestionBreakdownDto;
+  yMax: number;
 };
 
 export type DashboardChartsResponseDto = {
