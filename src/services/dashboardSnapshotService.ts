@@ -1,9 +1,4 @@
-import type {
-  ChartsPayload,
-  DataMode,
-  MetricsPayload,
-  WeatherData,
-} from "../types";
+import type { DataMode } from "../types";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
@@ -11,12 +6,6 @@ const API_BASE_URL =
 type DashboardSnapshotPayload = {
   city: string;
   dataMode: DataMode;
-  trafficCount: number;
-  incidentCount: number;
-  generatedAt: string;
-  weather: WeatherData | null;
-  metrics: MetricsPayload | null;
-  congestion: ChartsPayload["congestion"];
 };
 
 export class DashboardSnapshotService {

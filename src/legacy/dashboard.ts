@@ -740,17 +740,11 @@ async function loadDashboardData() {
 }
 
 async function saveDashboardSnapshot() {
-  if (!lastChartsPayload) return;
+  if (state.dataMode !== "live") return;
 
   await DashboardSnapshotService.saveSnapshot({
     city: state.cityKey,
     dataMode: state.dataMode,
-    trafficCount: state.traffic.data.length,
-    incidentCount: getFilteredIncidents().length,
-    generatedAt: new Date().toISOString(),
-    weather: state.weather,
-    metrics: lastMetricsPayload,
-    congestion: lastChartsPayload.congestion,
   });
 }
 
