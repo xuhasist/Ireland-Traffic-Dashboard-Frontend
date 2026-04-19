@@ -19,6 +19,7 @@ import {
   DashboardSnapshotService,
   DashboardSummaryService,
   DashboardChartsService,
+  DashboardService,
 } from "../services";
 import {
   mapIncidentsToListItems,
@@ -511,6 +512,10 @@ function updateTrafficMap(flowResults: TrafficStandardFormat[]) {
 }
 
 async function updateCharts() {
+  if (lastChartsPayload) {
+    opts?.onChartsData?.(lastChartsPayload);
+    return;
+  }
   const chartsResponse = await DashboardChartsService.fetchCharts({
     traffic: state.traffic.raw ?? [],
     previousSpeedTrend: state.charts.speedTrend.labels.map((label, index) => ({
@@ -576,6 +581,11 @@ export async function cityChangeHandler(currentCity: string) {
 
 async function updateMetricsCards() {
   if (!opts?.onMetricsData) return;
+
+  if (lastMetricsPayload) {
+    opts.onMetricsData(lastMetricsPayload);
+    return;
+  }
 
   const updatedAt = formatTimeWithSeconds(CONFIG.timeZone);
   state.metrics.lastUpdatedAt = updatedAt;
@@ -694,6 +704,39 @@ async function loadDashboardData() {
 
   const city = getCityConfig();
 
+  // Prefer aggregate dashboard API in live mode
+  if (state.dataMode === "live") {
+    const dashboard = await DashboardService.fetchDashboard(
+      state.cityKey,
+      state.dataMode,
+    );
+
+    if (dashboard) {
+      state.weather = mapWeatherToViewModel(dashboard.weather);
+      state.traffic.raw = dashboard.traffic ?? [];
+      state.traffic.data = mapTrafficFlowsToListItems(state.traffic.raw);
+      state.incidents.raw = dashboard.incidents ?? [];
+      state.incidents.data = mapIncidentsToListItems(state.incidents.raw);
+
+      state.metrics.prevAvgSpeed = dashboard.metrics.avgSpeed;
+      lastMetricsPayload = dashboard.metrics;
+      lastChartsPayload = dashboard.charts;
+      state.metrics.lastUpdatedAt = dashboard.metrics.updatedAt ?? null;
+
+      state.charts.speedTrend.labels = [...dashboard.charts.speedTrend.labels];
+      state.charts.speedTrend.data = [...dashboard.charts.speedTrend.data];
+      state.charts.congestion.good = dashboard.charts.congestion.good;
+      state.charts.congestion.moderate = dashboard.charts.congestion.moderate;
+      state.charts.congestion.heavy = dashboard.charts.congestion.heavy;
+
+      return;
+    }
+
+    console.warn(
+      "Dashboard aggregate API failed, falling back to per-endpoint loading.",
+    );
+  }
+
   // Promise.all: run independent network calls in parallel to reduce total wait time.
   // Important: Promise.all rejects if ANY promise rejects. To avoid losing all data due
   // to a single failing request, we wrap each request with a local fallback.
@@ -754,6 +797,10 @@ async function saveDashboardSnapshot() {
 export async function runDashboardRefresh({
   flashFilter = false,
 } = {}): Promise<void> {
+  // reset last payloads so each refresh decides whether to use aggregate
+  lastMetricsPayload = null;
+  lastChartsPayload = null;
+
   // avoid no parameter error
   await loadDashboardData();
   // Draw traffic flow on the map using raw flow segments

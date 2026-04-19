@@ -5,3 +5,4 @@ export { CityConfigService } from "./cityConfigService";
 export { DashboardSnapshotService } from "./dashboardSnapshotService";
 export { DashboardSummaryService } from "./dashboardSummaryService";
 export { DashboardChartsService } from "./dashboardChartsService";
+export { DashboardService } from "./dashboardService";
