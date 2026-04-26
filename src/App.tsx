@@ -14,6 +14,7 @@ import CityDropdown from "./components/CityDropdown";
 import { useTrafficDashboard } from "./hooks/useTrafficDashboard";
 import LoadingOverlay from "./components/LoadingOverlay";
 import MapLegend from "./components/MapLegend";
+import SnapshotHistory from "./components/SnapshotHistory";
 
 export default function App() {
   const {
@@ -146,6 +147,26 @@ export default function App() {
             onNext={actions.onNextIncidentPage}
           />
         </div>
+        <aside className="snapshot-drawer" aria-label="Snapshot history panel">
+          <div className="snapshot-drawer-tab">Snapshots</div>
+
+          <div className="snapshot-panel">
+            <div className="snapshot-panel-header">
+              <h2>Snapshot History</h2>
+              <span className="snapshot-panel-city">
+                {uiState.currentCity ?? "—"}
+              </span>
+            </div>
+
+            <SnapshotHistory
+              city={uiState.currentCity}
+              limit={10}
+              onSelect={(item) => {
+                console.log("Selected snapshot:", item);
+              }}
+            />
+          </div>
+        </aside>
       </div>
     </>
   );

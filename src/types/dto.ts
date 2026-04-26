@@ -164,3 +164,57 @@ export type DashboardDataResponseDto = {
   incidents: IncidentDto[];
   charts?: DashboardChartsDto;
 };
+
+/* ---------------------------------- */
+/* dashboard snapshots                */
+/* ---------------------------------- */
+
+export type SnapshotWeatherDto = {
+  temperature: number;
+  description: string;
+  icon: string;
+  dt: number; // unix timestamp (seconds)
+  timezone: string;
+} | null;
+
+export type SnapshotTrendDto = {
+  text: string;
+  dir: string;
+} | null;
+
+export type SnapshotMetricsDto = {
+  avgSpeed: number | null;
+  commuteTime: number | null;
+  congestedRoads: number | null;
+  activeIncidentsFiltered: number | null;
+  activeIncidentsTotal: number | null;
+  avgJam: number | null;
+  healthScore: number | null;
+  updatedAt: string | null;
+  jamThreshold: number;
+  trend: SnapshotTrendDto;
+} | null;
+
+export type SnapshotCongestionDto = {
+  good: number;
+  moderate: number;
+  heavy: number;
+};
+
+export type DashboardSnapshotItemDto = {
+  id: string;
+  city: string;
+  dataMode: string;
+  trafficCount: number;
+  incidentCount: number;
+  generatedAt: string;
+  capturedAt: string;
+  weather: SnapshotWeatherDto;
+  metrics: SnapshotMetricsDto;
+  congestion: SnapshotCongestionDto;
+};
+
+export type DashboardSnapshotListResponseDto = {
+  meta: ApiMetaDto;
+  data: DashboardSnapshotItemDto[];
+};
