@@ -720,14 +720,45 @@ async function loadDashboardData() {
 
       state.metrics.prevAvgSpeed = dashboard.metrics.avgSpeed;
       lastMetricsPayload = dashboard.metrics;
-      lastChartsPayload = dashboard.charts;
       state.metrics.lastUpdatedAt = dashboard.metrics.updatedAt ?? null;
 
-      state.charts.speedTrend.labels = [...dashboard.charts.speedTrend.labels];
-      state.charts.speedTrend.data = [...dashboard.charts.speedTrend.data];
+      const latestLabel =
+        dashboard.charts.speedTrend.labels.at(-1) ??
+        formatTimeWithSeconds(CONFIG.timeZone);
+
+      const latestAvgSpeed =
+        dashboard.charts.speedTrend.data.at(-1) ??
+        dashboard.metrics.avgSpeed ??
+        0;
+
+      const labels = [...state.charts.speedTrend.labels, latestLabel];
+      const data = [
+        ...state.charts.speedTrend.data,
+        Number(latestAvgSpeed.toFixed(1)),
+      ];
+
+      while (labels.length > CONFIG.charts.speedTrendMaxPoints) labels.shift();
+      while (data.length > CONFIG.charts.speedTrendMaxPoints) data.shift();
+
+      state.charts.speedTrend.labels = labels;
+      state.charts.speedTrend.data = data;
+
       state.charts.congestion.good = dashboard.charts.congestion.good;
       state.charts.congestion.moderate = dashboard.charts.congestion.moderate;
       state.charts.congestion.heavy = dashboard.charts.congestion.heavy;
+
+      lastChartsPayload = {
+        speedTrend: {
+          labels: [...labels],
+          data: [...data],
+          yMax: dashboard.charts.speedTrend.yMax,
+        },
+        congestion: {
+          good: dashboard.charts.congestion.good,
+          moderate: dashboard.charts.congestion.moderate,
+          heavy: dashboard.charts.congestion.heavy,
+        },
+      };
 
       return;
     }
