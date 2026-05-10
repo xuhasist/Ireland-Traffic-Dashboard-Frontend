@@ -1,3 +1,7 @@
+# Ireland Traffic Dashboard 
+A full-stack traffic monitoring dashboard for Irish cities, built with React 18.3.1, TypeScript 5.6.3, Spring Boot 3.5.0 with Kotlin 2.1.21, PostgreSQL 16, MongoDB 7, Redis 7, and Docker Compose.  
+It displays weather, traffic flow, incidents, summary metrics, charts, map visualization, and dashboard snapshots.
+
 ## 📁 Frontend Project Structure
 
 ```
@@ -48,7 +52,7 @@ Main responsibilities:
 ```
 1. Creates and manages React state
 2. Initializes the dashboard
-3. Fetches city configurations from the backend
+3. Fetches cities and city configurations from the backend
 4. Connects React state with the existing legacy dashboard logic
 5. Provides state and action handlers to App.tsx
 ```
